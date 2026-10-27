@@ -13,7 +13,9 @@ The app is two files: `index.html` and `sw.js`. It installs as a progressive web
 - **Console.** Under the editor. Some cards are checked only by what they log.
 - **Target.** Shows the result you are aiming for (the page and its console), not the code.
 - **Context.** Lists what is hard to eyeball, such as the target's font names, sizes, margins and exact colors, and every difference between your page and the target. It updates as you type.
-- **Hint.** Opens a short reference for the topic inside the app, with a Back button to the card and a link to MDN for more. MDN refuses to load inside other sites, so the essentials are written into the app.
+- **Hint.** Opens a short reference for the topic inside the app, with a Back button to the card and a link to MDN for more. MDN refuses to load inside other sites, so the essentials are written into the app. Where the card's generator makes cards that differ enough, the hint also shows a similar card (other fill-ins) and its answer. A hint never shows your card's answer word for word: an example that would is left out.
+- **Context and Hint shorten the wait.** The first time you open either on a card, a pop-up says how much sooner the card's next review will be if you match it (see below).
+- **Give up.** Asks first, then shows the answer (with a button to put it in the editor). The card can no longer be submitted: Submit becomes **Next**. It counts as a miss, so the card goes back to level 0 and stays due.
 - **Submit.** Grades your page against the target in both views, then moves to the next card. **Details** shows what differed and one answer.
 
 ## Cards are generated
@@ -24,7 +26,7 @@ Grading compares the rendered pages, not the code: element structure and text, e
 
 ## Spaced repetition
 
-Like the [Flashcards](https://github.com/sonusario/flashcard_app) app: Leitner levels on golden-ratio intervals (1, 2, 3, 4, 7, 11, 18… days) and buckets of 7 shuffled cards. A match moves a card up a level; a miss sends it back to level 0. The difference is chronology: due cards are bucketed earliest-in-the-path first, and new cards are introduced strictly in path order, so later topics build on earlier ones. **Path** shows every card and its level.
+Like the [Flashcards](https://github.com/sonusario/flashcard_app) app: Leitner levels on golden-ratio intervals (1, 2, 3, 4, 7, 11, 18… days) and buckets of 7 shuffled cards. A match moves a card up a level; a miss (or giving up) sends it back to level 0. Each aid you opened on that card, Context or Hint, takes one level off the wait before the next review, down to later the same day, so a card you matched with help comes back sooner. The difference is chronology: due cards are bucketed earliest-in-the-path first, and new cards are introduced strictly in path order, so later topics build on earlier ones. **Path** shows every card and its level.
 
 Progress is stored in the browser (`localStorage`).
 
