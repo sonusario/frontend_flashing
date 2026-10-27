@@ -1,0 +1,1841 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Frontend Flashing</title>
+<meta name="description" content="Flashcards for front-end skills: match a target page with HTML, CSS and JavaScript, on a spaced-repetition path toward building progressive web apps.">
+<meta name="theme-color" content="#151821">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2016%2016'%3E%3Crect%20width='16'%20height='16'%20rx='3'%20fill='%23151821'/%3E%3Crect%20x='2.5'%20y='3.5'%20width='11'%20height='9'%20rx='1.5'%20fill='none'%20stroke='%238ab4ff'/%3E%3Cpath%20d='M9.2%204.4%205.6%208.7h2.6L7%2011.6l3.6-4.4H8z'%20fill='%23ffc94a'/%3E%3C/svg%3E">
+<link rel="manifest" id="manifestLink">
+<style>
+:root {
+  --bg: #12151c; --panel: #1a1e28; --panel2: #232838; --line: #2f3548; --text: #e6e9f0; --muted: #98a0b3;
+  --accent: #8ab4ff; --accent-text: #0d1220; --flash: #ffc94a; --good: #5bd18b; --bad: #ff7b7b; --warn: #ffc94a;
+  --code-bg: #0e1117; --code-dim: #6f7891; --radius: 8px; color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f3f4f8; --panel: #ffffff; --panel2: #eceff5; --line: #d6dae4; --text: #1c2030; --muted: #5b6375;
+    --accent: #2f62d0; --accent-text: #ffffff; --flash: #a86f00; --good: #1b8549; --bad: #c62f2f; --warn: #9a6500;
+    --code-bg: #fbfbfd; --code-dim: #8a91a3; color-scheme: light;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  padding: 0 max(12px, env(safe-area-inset-right)) 24px max(12px, env(safe-area-inset-left));
+}
+button {
+  font: inherit; color: var(--text); background: var(--panel2); border: 1px solid var(--line);
+  border-radius: 6px; padding: 6px 12px; cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: .5; cursor: default; }
+button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+button[aria-pressed="true"] { background: var(--flash); color: #1a1400; border-color: var(--flash); }
+button.link { background: none; border: 0; padding: 0; color: var(--muted); text-decoration: underline; }
+a { color: var(--accent); }
+code, pre, textarea { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+code { background: var(--panel2); border-radius: 4px; padding: 0 4px; }
+
+/* ---------------------------------------------------------------- top bar */
+.top { display: flex; align-items: center; gap: 10px; padding: 10px 0; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 16px; }
+.brand img { width: 22px; height: 22px; }
+.stats { color: var(--muted); font-size: 13px; }
+.top .spacer { flex: 1; }
+
+/* ---------------------------------------------------------------- task */
+.task { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.task-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.task-head h1 { margin: 0; font-size: 18px; }
+.unit { color: var(--flash); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+.lvl { color: var(--muted); font-size: 12px; margin-left: auto; }
+.prompt { margin: 8px 0 10px; font-size: 15px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.actions .spacer { flex: 1; }
+#vpToggle { display: none; }
+.result { margin-top: 10px; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel2);
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.result.pass { border-color: var(--good); }
+.result.fail { border-color: var(--bad); }
+.result .mark { font-weight: 700; }
+.result.pass .mark { color: var(--good); }
+.result.fail .mark { color: var(--bad); }
+
+/* ---------------------------------------------------------------- work area */
+.main { position: relative; margin-top: 12px; }
+.work { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1100px) {
+  .work { grid-template-columns: minmax(0, 1.2fr) minmax(380px, 1fr); align-items: start; }
+}
+.views { display: flex; gap: 12px; align-items: flex-start; max-width: 920px; }
+.vp { margin: 0; min-width: 0; }
+.vp.land { flex: 1.7778 1 0; }
+.vp.port { flex: .5625 1 0; }
+.vp figcaption { font-size: 12px; color: var(--muted); margin-bottom: 4px; display: flex; gap: 6px; }
+.vp .badge { display: none; color: #1a1400; background: var(--flash); border-radius: 4px; padding: 0 5px; font-weight: 600; }
+.views.target .badge { display: inline; }
+.screen { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+.vp.land .screen { aspect-ratio: 16 / 9; }
+.vp.port .screen { aspect-ratio: 9 / 16; }
+.screen iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; transform: scale(var(--s, .5)); background: #fff; }
+.screen .tgt { visibility: hidden; }
+.views.target .screen .tgt { visibility: visible; }
+.views.target .screen .cur { visibility: hidden; }
+@media (max-width: 760px) {
+  #vpToggle { display: inline-block; }
+  .views .vp { flex: 1 1 auto; width: 100%; }
+  .views.show-land .vp.port, .views.show-port .vp.land { display: none; }
+  .vp.port { max-width: calc(62vh * 9 / 16); margin: 0 auto; }
+}
+
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); }
+.panel-head { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.panel-head .spacer { flex: 1; }
+.panel-head button { padding: 2px 8px; font-size: 12px; }
+
+.context { margin-top: 12px; }
+.context .body { padding: 8px 12px 12px; }
+.context h3 { margin: 10px 0 4px; font-size: 13px; }
+.context ul { margin: 0; padding-left: 18px; }
+.context li { margin: 3px 0; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--line); vertical-align: -1px; margin-right: 3px; }
+.diff-where { color: var(--muted); font-size: 12px; }
+.ok { color: var(--good); }
+.bad { color: var(--bad); }
+.muted { color: var(--muted); }
+
+/* ---------------------------------------------------------------- editor */
+.tabs { display: flex; gap: 2px; }
+.tabs button { border-radius: 5px; padding: 3px 10px; font-size: 12px; background: none; border-color: transparent; color: var(--muted); }
+.tabs button.active { background: var(--panel2); border-color: var(--line); color: var(--text); }
+.tabs button.locked::after { content: " · read-only"; color: var(--code-dim); }
+.code-wrap { background: var(--code-bg); border-radius: 0 0 var(--radius) var(--radius); }
+.given { margin: 0; padding: 8px 12px; color: var(--code-dim); white-space: pre-wrap; border-bottom: 1px dashed var(--line); }
+.given.after { border-bottom: 0; border-top: 1px dashed var(--line); }
+.given::before { content: attr(data-label); display: block; font-family: system-ui, sans-serif; font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+#code {
+  display: block; width: 100%; min-height: 260px; resize: vertical; border: 0; outline: 0; margin: 0;
+  padding: 10px 12px; background: var(--code-bg); color: var(--text); line-height: 1.5; tab-size: 2; white-space: pre;
+}
+#code[readonly] { color: var(--code-dim); }
+@media (min-width: 1100px) { #code { min-height: 340px; } }
+.console { margin-top: 12px; }
+.console ul { list-style: none; margin: 0; padding: 6px 10px; max-height: 220px; overflow: auto; min-height: 60px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; background: var(--code-bg);
+  border-radius: 0 0 var(--radius) var(--radius); }
+.console li { padding: 2px 0; border-bottom: 1px solid var(--line); white-space: pre-wrap; word-break: break-word; }
+.console li:last-child { border-bottom: 0; }
+.console li.warn { color: var(--warn); }
+.console li.error { color: var(--bad); }
+.console li.empty { color: var(--code-dim); border: 0; }
+
+/* ---------------------------------------------------------------- hint */
+.hint { position: absolute; inset: 0; z-index: 5; background: var(--bg); overflow: auto; }
+.hint .doc { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; max-width: 760px; }
+.hint h2 { margin: 10px 0 6px; font-size: 18px; }
+.hint pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; overflow: auto; }
+.hint .doc-links { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+
+.done-card { padding: 20px 0; }
+
+/* ---------------------------------------------------------------- dialogs */
+dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px 18px; width: min(560px, calc(100vw - 24px)); max-height: calc(100dvh - 32px); overflow: auto; }
+dialog::backdrop { background: rgba(0, 0, 0, .55); }
+dialog h2 { margin: 0 0 8px; font-size: 16px; }
+dialog h3 { margin: 14px 0 6px; font-size: 13px; }
+dialog p { margin: 0 0 8px; }
+dialog .row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+dialog .row .spacer { flex: 1; }
+dialog pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; overflow: auto; }
+.about-log { margin: 0; padding: 0; list-style: none; font-size: 13px; }
+.about-log li { margin: 0 0 4px; }
+.about-log time { color: var(--muted); margin-right: 8px; font-variant-numeric: tabular-nums; }
+.path-unit { margin: 10px 0 2px; font-size: 12px; font-weight: 600; color: var(--flash); text-transform: uppercase; letter-spacing: .05em; }
+.path-list { list-style: none; margin: 0; padding: 0; }
+.path-list li { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.path-list .state { color: var(--muted); white-space: nowrap; }
+.path-list .state.due { color: var(--flash); }
+
+.grade-host { position: fixed; left: 0; top: 0; width: 0; height: 0; overflow: visible; opacity: 0; pointer-events: none; z-index: -1; }
+.grade-host iframe { position: absolute; left: 0; top: 0; border: 0; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand"><img id="brandIcon" alt=""><span>Frontend Flashing</span></div>
+  <span class="stats" id="stats"></span>
+  <span class="spacer"></span>
+  <button id="installBtn" hidden>Install</button>
+  <button id="pathBtn">Path</button>
+</header>
+
+<section class="task" id="task">
+  <div class="task-head">
+    <span class="unit" id="cardUnit"></span>
+    <h1 id="cardTitle"></h1>
+    <span class="lvl" id="cardLevel"></span>
+  </div>
+  <p class="prompt" id="prompt"></p>
+  <div class="actions" id="actions">
+    <button id="targetBtn" aria-pressed="false" title="Show the result you are aiming for">Target</button>
+    <button id="contextBtn" aria-pressed="false" title="Exact values and differences">Context</button>
+    <button id="hintBtn" title="Open the reference for this topic">Hint</button>
+    <button id="vpToggle">Show 9:16</button>
+    <span class="spacer"></span>
+    <button id="submitBtn" class="primary" title="Ctrl+Enter">Submit</button>
+  </div>
+  <div id="result" class="result" hidden></div>
+</section>
+
+<div class="main" id="main">
+  <div class="work" id="work">
+    <div>
+      <div class="views show-land" id="views">
+        <figure class="vp land"><figcaption>16:9 <span class="badge">Target</span></figcaption><div class="screen" id="screenLand"></div></figure>
+        <figure class="vp port"><figcaption>9:16 <span class="badge">Target</span></figcaption><div class="screen" id="screenPort"></div></figure>
+      </div>
+      <section class="panel context" id="context" hidden>
+        <div class="panel-head"><span>Context</span><span class="spacer"></span><span id="contextState"></span></div>
+        <div class="body" id="contextBody"></div>
+      </section>
+    </div>
+    <div>
+      <section class="panel editor">
+        <div class="panel-head">
+          <div class="tabs" id="tabs">
+            <button data-lang="html">HTML</button><button data-lang="css">CSS</button><button data-lang="js">JS</button>
+          </div>
+          <span class="spacer"></span>
+          <button id="resetBtn" title="Put this card's code back to how it started">Reset</button>
+        </div>
+        <div class="code-wrap">
+          <pre class="given" id="givenPre" data-label="Runs before your code" hidden></pre>
+          <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code editor"></textarea>
+          <pre class="given after" id="givenPost" data-label="Runs after your code" hidden></pre>
+        </div>
+      </section>
+      <section class="panel console">
+        <div class="panel-head"><span id="consoleTitle">Console</span><span class="spacer"></span><button id="clearConsole">Clear</button></div>
+        <ul id="consoleList"></ul>
+      </section>
+      <p style="margin: 12px 0 0; text-align: right; font-size: 12px"><button class="link" id="aboutBtn">About</button></p>
+    </div>
+  </div>
+  <section class="hint" id="hint" hidden></section>
+  <section class="done-card" id="doneCard" hidden></section>
+</div>
+
+<div class="grade-host" id="gradeHost" aria-hidden="true"></div>
+
+<dialog id="aboutDlg" aria-labelledby="aboutTitle">
+  <h2 id="aboutTitle">About Frontend Flashing</h2>
+  <p>Flashcards for front-end skills. Each card is a small page to match: write the HTML, CSS or JavaScript until your result matches the target. The path runs from first tags to a working progressive web app.</p>
+  <p><a href="https://github.com/sonusario/frontend_flashing" target="_blank" rel="noopener">Source on GitHub</a> ·
+     <a href="https://sonusario.github.io/" target="_blank" rel="noopener">More projects (Sonusario's Selects)</a></p>
+  <h3>Changes</h3>
+  <ul class="about-log" id="aboutLog"><li class="muted">Loading changes…</li></ul>
+  <div class="row"><button id="resetProgress">Reset progress…</button><span class="spacer"></span><button id="aboutClose">Close</button></div>
+</dialog>
+
+<dialog id="pathDlg" aria-labelledby="pathTitle">
+  <h2 id="pathTitle">Path</h2>
+  <p class="muted">Cards are introduced in this order. Each one is made fresh every time you see it, with new values.</p>
+  <div id="pathBody"></div>
+  <div class="row"><button id="pathClose">Close</button></div>
+</dialog>
+
+<dialog id="detailDlg" aria-labelledby="detailTitle">
+  <h2 id="detailTitle">Last result</h2>
+  <div id="detailBody"></div>
+  <div class="row"><button id="detailClose">Close</button></div>
+</dialog>
+
+<script>
+'use strict';
+
+// =============================================================================
+// Small helpers
+// =============================================================================
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Prompts mark code with ~tildes~.
+const rich = s => esc(s).replace(/~([^~]+)~/g, '<code>$1</code>');
+
+function el(tag, attrs, ...kids) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
+    else if (k === 'html') node.innerHTML = v;
+    else node.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) node.append(kid);
+  return node;
+}
+
+// Seeded random numbers (mulberry32), so a card made from a seed is the same card again.
+function rng(seed) {
+  let a = seed >>> 0;
+  const next = () => {
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const r = {
+    next,
+    int: (lo, hi) => lo + Math.floor(next() * (hi - lo + 1)),
+    pick: list => list[Math.floor(next() * list.length)],
+    step: (lo, hi, step) => lo + step * Math.floor(next() * (Math.floor((hi - lo) / step) + 1)),
+    shuffle: list => {
+      const out = list.slice();
+      for (let i = out.length - 1; i > 0; i--) {
+        const j = Math.floor(next() * (i + 1));
+        [out[i], out[j]] = [out[j], out[i]];
+      }
+      return out;
+    },
+    sample: (list, n) => r.shuffle(list).slice(0, n),
+    bool: () => next() < 0.5,
+  };
+  return r;
+}
+const randomSeed = () => Math.floor(Math.random() * 2 ** 31);
+
+// =============================================================================
+// Cards. Each template makes a fresh card from a seed: the prompt, the code the
+// learner starts from, and the answer that draws the target. Only the card's
+// own language is editable; the other two are given.
+//
+// gen(r) returns:
+//   prompt          text, with ~code~ marks
+//   html, css, js   the starting code (css defaults to BASE_CSS)
+//   sol             the answer, in the card's language
+//   focus           extra CSS properties to compare and to list in Context
+//   attrs           attributes to compare (only where the target has them)
+//   given(r, i)     { pre, post, actions } that run around JavaScript answers.
+//                   Grading runs it again with i = 1.. and other values, so an
+//                   answer has to work in general, not for one set of numbers.
+//   alts            how many extra runs (default 1 when there is a given)
+//   settle          ms to wait before measuring (async cards)
+// =============================================================================
+
+const BASE_CSS = 'body {\n  font-family: system-ui, sans-serif;\n  margin: 16px;\n  color: #222;\n  background: #fafafa;\n}\n';
+const PALETTE = ['#e4572e', '#29335c', '#f3a712', '#4c956c', '#2e86ab', '#a23b72', '#f18f01', '#3a86ff', '#8338ec', '#06d6a0', '#ef476f', '#118ab2', '#073b4c', '#ff006e', '#6a994e', '#bc4749'];
+const WORDS = ['Nebula', 'Pixel', 'Ember', 'Orbit', 'Lumen', 'Comet', 'Glyph', 'Rune', 'Echo', 'Vortex', 'Nova', 'Atlas', 'Cobalt', 'Maple', 'Tundra', 'Saffron', 'Quartz', 'Willow'];
+const NOUNS = ['Quest', 'Drift', 'Garden', 'Forge', 'Arcade', 'Harbor', 'Station', 'Valley', 'Signal', 'Tower'];
+const ITEMS = ['sword', 'shield', 'potion', 'map', 'lantern', 'rope', 'key', 'compass', 'bow', 'scroll', 'gem', 'boots'];
+const NAMES = ['Ada', 'Grace', 'Linus', 'Alan', 'Hedy', 'Kat', 'Margo', 'Ravi', 'Tomo', 'Zoe', 'Ines', 'Omar'];
+const FONTS = ['Georgia, serif', '"Courier New", monospace', '"Trebuchet MS", sans-serif', 'Verdana, sans-serif', '"Times New Roman", serif', 'Impact, sans-serif'];
+const title2 = r => r.pick(WORDS) + ' ' + r.pick(NOUNS);
+const CANVAS_START = 'const canvas = document.querySelector("#game");\nconst ctx = canvas.getContext("2d");\n';
+const CANVAS_HTML = '<canvas id="game" width="320" height="180"></canvas>\n';
+const CANVAS_CSS = BASE_CSS + 'canvas {\n  border: 1px solid #888;\n  background: white;\n}\n';
+const jsList = list => JSON.stringify(list);
+
+const TEMPLATES = [
+  // --------------------------------------------------------------- HTML
+  { id: 'html-headings', unit: 'HTML', title: 'Headings', lang: 'html', doc: 'html-text', gen(r) {
+    const a = title2(r), b = r.pick(['Chapter', 'Level', 'World', 'Stage']) + ' ' + r.int(1, 9);
+    return { prompt: `Add an ~<h1>~ that says “${a}”, then an ~<h2>~ under it that says “${b}”.`,
+      html: '<!-- Your headings go here -->\n', sol: `<h1>${a}</h1>\n<h2>${b}</h2>\n` };
+  } },
+  { id: 'html-inline', unit: 'HTML', title: 'Strong and emphasis', lang: 'html', doc: 'html-text', gen(r) {
+    const [w1, w2] = r.sample(['quick', 'brown', 'lazy', 'sleepy', 'clever', 'bright', 'silent', 'curious'], 2);
+    const line = (x, y) => `<p>The ${x} fox jumps over the ${y} dog.</p>\n`;
+    return { prompt: `Mark “${w1}” as important with ~<strong>~ and “${w2}” as emphasized with ~<em>~.`,
+      html: line(w1, w2), sol: line(`<strong>${w1}</strong>`, `<em>${w2}</em>`) };
+  } },
+  { id: 'html-lists', unit: 'HTML', title: 'Lists', lang: 'html', doc: 'html-lists', gen(r) {
+    const ordered = r.bool(), items = r.sample(ITEMS, r.int(3, 5)), tag = ordered ? 'ol' : 'ul';
+    return { prompt: `Under the heading, make ${ordered ? 'a numbered list (~<ol>~)' : 'a bulleted list (~<ul>~)'} with these items, in order: ${items.join(', ')}.`,
+      html: '<h3>Backpack</h3>\n<!-- Your list goes here -->\n',
+      sol: `<h3>Backpack</h3>\n<${tag}>\n${items.map(i => `  <li>${i}</li>`).join('\n')}\n</${tag}>\n` };
+  } },
+  { id: 'html-links', unit: 'HTML', title: 'Links', lang: 'html', doc: 'html-links', gen(r) {
+    const page = r.pick(['rules', 'controls', 'credits', 'changelog', 'leaderboard']);
+    const url = `https://example.com/${r.pick(WORDS).toLowerCase()}/${page}`;
+    return { prompt: `Turn the word “${page}” into a link to ~${url}~.`,
+      css: BASE_CSS + 'a {\n  color: #2e86ab;\n}\n', attrs: ['href'],
+      html: `<p>Before you play, read the ${page}.</p>\n`,
+      sol: `<p>Before you play, read the <a href="${url}">${page}</a>.</p>\n` };
+  } },
+  { id: 'html-form', unit: 'HTML', title: 'Labels, inputs and buttons', lang: 'html', doc: 'html-forms', gen(r) {
+    const [id, label, hint] = r.pick([['name', 'Player name', 'e.g. Nova'], ['email', 'Email', 'you@example.com'], ['team', 'Team', 'Pick a team name'], ['seed', 'World seed', 'Any number']]);
+    const btn = r.pick(['Join', 'Start', 'Save', 'Continue']);
+    return { prompt: `Add a ~<label>~ “${label}” tied (with ~for~) to an ~<input>~ whose id is ~${id}~ and placeholder is “${hint}”. Then add a ~<button>~ that says “${btn}”.`,
+      css: BASE_CSS + 'label, input, button {\n  display: block;\n  margin-bottom: 8px;\n  font: inherit;\n}\n', attrs: ['for', 'id', 'placeholder'],
+      html: '<!-- label, input, button -->\n',
+      sol: `<label for="${id}">${label}</label>\n<input id="${id}" placeholder="${hint}">\n<button>${btn}</button>\n` };
+  } },
+  { id: 'html-semantic', unit: 'HTML', title: 'Page structure', lang: 'html', doc: 'html-semantic', gen(r) {
+    const t = title2(r), foot = '© 20' + r.int(24, 30) + ' ' + r.pick(NAMES), body = r.pick(['Press start to begin your run.', 'Collect every gem to open the gate.', 'Survive ten waves to win.']);
+    return { prompt: 'Replace the three ~<div>~s with ~<header>~, ~<main>~ and ~<footer>~, and put the title inside an ~<h1>~ in the header.',
+      css: BASE_CSS + 'header {\n  background: #29335c;\n  color: white;\n  padding: 8px 12px;\n}\nheader h1 {\n  margin: 0;\n  font-size: 22px;\n}\nmain {\n  padding: 12px;\n}\nfooter {\n  border-top: 1px solid #ccc;\n  padding: 8px 12px;\n  font-size: 12px;\n  color: #666;\n}\n',
+      html: `<div>${t}</div>\n<div>\n  <p>${body}</p>\n</div>\n<div>${foot}</div>\n`,
+      sol: `<header>\n  <h1>${t}</h1>\n</header>\n<main>\n  <p>${body}</p>\n</main>\n<footer>${foot}</footer>\n` };
+  } },
+  { id: 'html-canvas', unit: 'HTML', title: 'The canvas element', lang: 'html', doc: 'html-canvas', gen(r) {
+    const id = r.pick(['game', 'stage', 'board', 'screen']), w = r.step(160, 320, 40), h = r.step(100, 200, 20);
+    return { prompt: `Add a ~<canvas>~ with id ~${id}~ that is ${w} pixels wide and ${h} tall, using its ~width~ and ~height~ attributes.`,
+      css: BASE_CSS + 'canvas {\n  border: 2px solid #333;\n  background: white;\n}\n', attrs: ['id', 'width', 'height'],
+      html: '<h3>Game</h3>\n<!-- Your canvas goes here -->\n',
+      sol: `<h3>Game</h3>\n<canvas id="${id}" width="${w}" height="${h}"></canvas>\n` };
+  } },
+
+  // --------------------------------------------------------------- CSS basics
+  { id: 'css-colors', unit: 'CSS basics', title: 'Colors', lang: 'css', doc: 'css-colors', gen(r) {
+    const [fg, bg] = r.sample(PALETTE, 2);
+    const rule = extra => BASE_CSS + `.box {\n  padding: 16px;\n  font-size: 20px;\n${extra}}\n`;
+    return { prompt: 'Give ~.box~ the target’s text ~color~ and ~background-color~. Context lists the exact colors.',
+      html: `<div class="box">${r.pick(WORDS)}</div>\n`, focus: ['color', 'background-color'],
+      css: rule('  /* color and background-color */\n'), sol: rule(`  color: ${fg};\n  background-color: ${bg};\n`) };
+  } },
+  { id: 'css-fonts', unit: 'CSS basics', title: 'Fonts', lang: 'css', doc: 'css-fonts', gen(r) {
+    const font = r.pick(FONTS), size = r.int(18, 40), weight = r.pick(['normal', 'bold']), style = r.pick(['normal', 'italic']);
+    const rule = extra => BASE_CSS + `.title {\n${extra}}\n`;
+    return { prompt: 'Match the target’s ~font-family~, ~font-size~, ~font-weight~ and ~font-style~ on ~.title~. Context names the font.',
+      html: `<p class="title">${title2(r)}</p>\n`, focus: ['font-family', 'font-size', 'font-weight', 'font-style'],
+      css: rule('  /* font-family, font-size, font-weight, font-style */\n'),
+      sol: rule(`  font-family: ${font};\n  font-size: ${size}px;\n  font-weight: ${weight};\n  font-style: ${style};\n`) };
+  } },
+  { id: 'css-text', unit: 'CSS basics', title: 'Text layout', lang: 'css', doc: 'css-text', gen(r) {
+    const align = r.pick(['center', 'right']), transform = r.pick(['uppercase', 'capitalize']), spacing = r.int(1, 5);
+    const rule = extra => BASE_CSS + `.tagline {\n  font-size: 18px;\n${extra}}\n`;
+    return { prompt: `Center or right-align ~.tagline~ like the target, set its ~text-transform~, and space its letters with ~letter-spacing~.`,
+      html: `<p class="tagline">the ${r.pick(WORDS).toLowerCase()} ${r.pick(NOUNS).toLowerCase()} awaits you</p>\n`, focus: ['text-align', 'text-transform', 'letter-spacing'],
+      css: rule(''), sol: rule(`  text-align: ${align};\n  text-transform: ${transform};\n  letter-spacing: ${spacing}px;\n`) };
+  } },
+  { id: 'css-box', unit: 'CSS basics', title: 'The box model', lang: 'css', doc: 'css-box', gen(r) {
+    const m = r.step(8, 32, 4), p = r.step(8, 32, 4), bw = r.int(1, 6), bc = r.pick(PALETTE);
+    const rule = extra => BASE_CSS + `.card {\n  background: white;\n${extra}}\n`;
+    return { prompt: 'Give each ~.card~ the target’s ~margin~, ~padding~ and a solid ~border~. Context shows the sizes.',
+      html: `<div class="card">${title2(r)}</div>\n<div class="card">${title2(r)}</div>\n`,
+      focus: ['margin-top', 'margin-right', 'margin-bottom', 'margin-left', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'border-top-width', 'border-top-color'],
+      css: rule(''), sol: rule(`  margin: ${m}px;\n  padding: ${p}px;\n  border: ${bw}px solid ${bc};\n`) };
+  } },
+  { id: 'css-radius', unit: 'CSS basics', title: 'Corners and shadows', lang: 'css', doc: 'css-radius', gen(r) {
+    const rad = r.step(4, 24, 4), y = r.int(2, 10), blur = r.step(4, 20, 2), alpha = r.pick([0.2, 0.3, 0.4]);
+    const rule = extra => BASE_CSS + `.card {\n  background: white;\n  padding: 20px;\n  width: 200px;\n${extra}}\n`;
+    return { prompt: 'Round the corners of ~.card~ with ~border-radius~ and give it the target’s ~box-shadow~.',
+      html: `<div class="card">${title2(r)}</div>\n`, focus: ['border-top-left-radius', 'box-shadow'],
+      css: rule(''), sol: rule(`  border-radius: ${rad}px;\n  box-shadow: 0 ${y}px ${blur}px rgba(0, 0, 0, ${alpha});\n`) };
+  } },
+  { id: 'css-sizing', unit: 'CSS basics', title: 'Sizing and box-sizing', lang: 'css', doc: 'css-sizing', gen(r) {
+    const w = r.step(160, 280, 20), h = r.step(80, 160, 20), pad = r.step(10, 24, 2);
+    const rule = extra => BASE_CSS + `.panel {\n  padding: ${pad}px;\n  border: 4px solid #29335c;\n  background: #dfe7fd;\n${extra}}\n`;
+    return { prompt: `Make ~.panel~ exactly ${w}×${h} pixels on screen, padding and border included. ~box-sizing~ makes that easy.`,
+      html: '<div class="panel">Inventory</div>\n', focus: ['box-sizing', 'width', 'height'],
+      css: rule(''), sol: rule(`  box-sizing: border-box;\n  width: ${w}px;\n  height: ${h}px;\n`) };
+  } },
+
+  // --------------------------------------------------------------- CSS layout
+  { id: 'css-units', unit: 'CSS layout', title: 'Relative units', lang: 'css', doc: 'css-units', gen(r) {
+    const vh = r.pick([20, 25, 30, 35]), pct = r.pick([40, 50, 60, 75]), rem = r.pick([1.25, 1.5, 2]);
+    const css = (a, b, c) => BASE_CSS + `.hero {\n  background: #29335c;\n  color: white;\n  height: ${a};\n}\n.bar {\n  height: 12px;\n  background: #f3a712;\n  width: ${b};\n}\n.title {\n  margin: 0;\n  font-size: ${c};\n}\n`;
+    return { prompt: `Swap the fixed sizes for relative ones: ~.hero~ is ${vh}% of the viewport height (~vh~), ~.bar~ is ${pct}% of its parent’s width, and ~.title~ is ${rem}~rem~. Compare both views.`,
+      html: `<div class="hero"><p class="title">${title2(r)}</p></div>\n<div class="bar"></div>\n`, focus: ['height', 'width', 'font-size'],
+      css: css('120px', '300px', '24px'), sol: css(vh + 'vh', pct + '%', rem + 'rem') };
+  } },
+  { id: 'css-display', unit: 'CSS layout', title: 'Inline-block', lang: 'css', doc: 'css-display', gen(r) {
+    const w = r.step(60, 100, 10), tags = r.sample(['fire', 'ice', 'stealth', 'speed', 'magic', 'armor'], r.int(3, 4));
+    const rule = extra => BASE_CSS + `.tag {\n  background: #29335c;\n  color: white;\n  padding: 4px;\n  margin: 2px;\n${extra}}\n`;
+    return { prompt: `Make each ~.tag~ an ~inline-block~ that is ${w}px wide with its text centered.`,
+      html: `<p>Tags: ${tags.map(t => `<span class="tag">${t}</span>`).join(' ')}</p>\n`, focus: ['display', 'width', 'text-align'],
+      css: rule(''), sol: rule(`  display: inline-block;\n  width: ${w}px;\n  text-align: center;\n`) };
+  } },
+  { id: 'css-flex-row', unit: 'CSS layout', title: 'Flexbox rows', lang: 'css', doc: 'css-flex', gen(r) {
+    const jc = r.pick(['center', 'flex-end', 'space-between', 'space-around', 'space-evenly']), gap = r.step(4, 24, 4);
+    const css = extra => BASE_CSS + `.row {\n  background: #e8ecf4;\n  padding: 8px;\n${extra}}\n.item {\n  background: #2e86ab;\n  color: white;\n  padding: 12px 16px;\n}\n`;
+    return { prompt: 'Make ~.row~ a flex container, then match the target’s ~justify-content~ and ~gap~.',
+      html: '<div class="row">\n  <div class="item">A</div>\n  <div class="item">B</div>\n  <div class="item">C</div>\n</div>\n',
+      focus: ['display', 'justify-content', 'column-gap'],
+      css: css(''), sol: css(`  display: flex;\n  justify-content: ${jc};\n  gap: ${gap}px;\n`) };
+  } },
+  { id: 'css-flex-col', unit: 'CSS layout', title: 'Flexbox columns', lang: 'css', doc: 'css-flex', gen(r) {
+    const ai = r.pick(['flex-start', 'center', 'flex-end']), gap = r.step(4, 20, 4);
+    const css = extra => BASE_CSS + `.stack {\n  background: #e8ecf4;\n  padding: 8px;\n${extra}}\n.item {\n  background: #a23b72;\n  color: white;\n  padding: 8px 14px;\n}\n`;
+    return { prompt: 'Stack the items in a flex column (~flex-direction~), then match ~align-items~ and ~gap~.',
+      html: '<div class="stack">\n  <div class="item">New game</div>\n  <div class="item">Continue</div>\n  <div class="item">Settings</div>\n</div>\n',
+      focus: ['display', 'flex-direction', 'align-items', 'row-gap'],
+      css: css(''), sol: css(`  display: flex;\n  flex-direction: column;\n  align-items: ${ai};\n  gap: ${gap}px;\n`) };
+  } },
+  { id: 'css-flex-grow', unit: 'CSS layout', title: 'Growing flex items', lang: 'css', doc: 'css-flex', gen(r) {
+    const w = r.step(60, 120, 10);
+    const css = (logo, search) => BASE_CSS + `.bar {\n  display: flex;\n  gap: 8px;\n  align-items: center;\n  background: #29335c;\n  padding: 8px;\n}\n.logo {\n  color: white;\n  font-weight: bold;\n${logo}}\n.search {\n  min-width: 0;\n${search}}\n`;
+    return { prompt: `Give ~.logo~ a fixed width of ${w}px and let ~.search~ grow to fill the rest of the bar (~flex: 1~).`,
+      html: `<nav class="bar">\n  <div class="logo">${r.pick(WORDS)}</div>\n  <input class="search" placeholder="Search">\n  <button>Go</button>\n</nav>\n`,
+      focus: ['flex-grow', 'width'], css: css('', ''), sol: css(`  width: ${w}px;\n`, '  flex: 1;\n') };
+  } },
+  { id: 'css-grid', unit: 'CSS layout', title: 'Grid columns', lang: 'css', doc: 'css-grid', gen(r) {
+    const n = r.int(2, 4), gap = r.step(4, 16, 4), tiles = r.int(5, 9);
+    const css = extra => BASE_CSS + `.grid {\n${extra}}\n.tile {\n  background: #f3a712;\n  padding: 12px;\n  text-align: center;\n}\n`;
+    return { prompt: `Lay out ~.grid~ as a grid of ${n} equal columns (~repeat~ and ~fr~) with a ${gap}px gap.`,
+      html: `<div class="grid">\n${Array.from({ length: tiles }, (_, i) => `  <div class="tile">${i + 1}</div>`).join('\n')}\n</div>\n`,
+      focus: ['display', 'grid-template-columns', 'column-gap', 'row-gap'],
+      css: css(''), sol: css(`  display: grid;\n  grid-template-columns: repeat(${n}, 1fr);\n  gap: ${gap}px;\n`) };
+  } },
+  { id: 'css-grid-span', unit: 'CSS layout', title: 'Spanning grid cells', lang: 'css', doc: 'css-grid', gen(r) {
+    const cols = r.int(2, 3), rows = 2;
+    const css = extra => BASE_CSS + `.grid {\n  display: grid;\n  grid-template-columns: repeat(4, 1fr);\n  gap: 8px;\n}\n.tile {\n  background: #4c956c;\n  color: white;\n  padding: 12px;\n}\n${extra}`;
+    return { prompt: `Make ~.wide~ span ${cols} columns and ~.tall~ span ${rows} rows (~grid-column~, ~grid-row~).`,
+      html: '<div class="grid">\n  <div class="tile wide">Map</div>\n  <div class="tile">HP</div>\n  <div class="tile tall">Party</div>\n  <div class="tile">XP</div>\n  <div class="tile">Gold</div>\n  <div class="tile">Quests</div>\n</div>\n',
+      focus: ['grid-column-end', 'grid-row-end'],
+      css: css(''), sol: css(`.wide {\n  grid-column: span ${cols};\n}\n.tall {\n  grid-row: span ${rows};\n}\n`) };
+  } },
+  { id: 'css-position', unit: 'CSS layout', title: 'Absolute positioning', lang: 'css', doc: 'css-position', gen(r) {
+    const v = r.pick(['top', 'bottom']), hz = r.pick(['left', 'right']), off = r.step(4, 16, 4);
+    const css = (card, badge) => BASE_CSS + `.card {\n  background: white;\n  border: 1px solid #ccc;\n  padding: 24px;\n  width: 220px;\n${card}}\n.badge {\n  background: #e4572e;\n  color: white;\n  font-size: 11px;\n  padding: 2px 6px;\n  border-radius: 8px;\n${badge}}\n`;
+    return { prompt: `Pin ~.badge~ ${off}px from the ${v} ${hz} corner of ~.card~: make the card ~relative~ and the badge ~absolute~.`,
+      html: `<div class="card">\n  <span class="badge">NEW</span>\n  <p>${title2(r)}</p>\n</div>\n`, focus: ['position', v, hz],
+      css: css('', ''), sol: css('  position: relative;\n', `  position: absolute;\n  ${v}: ${off}px;\n  ${hz}: ${off}px;\n`) };
+  } },
+  { id: 'css-fixed', unit: 'CSS layout', title: 'Fixed toolbars', lang: 'css', doc: 'css-position', gen(r) {
+    const edge = r.pick(['top', 'bottom']), h = r.step(40, 64, 8);
+    const css = extra => BASE_CSS + `.toolbar {\n  display: flex;\n  justify-content: space-around;\n  align-items: center;\n  background: #222;\n${extra}}\n.toolbar button {\n  font-size: 18px;\n}\n`;
+    return { prompt: `Fix ~.toolbar~ to the ${edge} of the screen, full width (~left: 0~ and ~right: 0~), ${h}px tall.`,
+      html: `<main>\n${Array.from({ length: 5 }, (_, i) => `  <p>Level ${i + 1}: ${title2(r)}</p>`).join('\n')}\n</main>\n<nav class="toolbar">\n  <button>◀</button>\n  <button>●</button>\n  <button>▶</button>\n</nav>\n`,
+      focus: ['position', edge, 'height'], css: css(''), sol: css(`  position: fixed;\n  left: 0;\n  right: 0;\n  ${edge}: 0;\n  height: ${h}px;\n`) };
+  } },
+  { id: 'css-zindex', unit: 'CSS layout', title: 'Stacking with z-index', lang: 'css', doc: 'css-zindex', gen(r) {
+    const z = r.shuffle([1, 2, 3]), names = ['red', 'blue', 'green'], top = names[z.indexOf(3)];
+    const css = extra => BASE_CSS + `.box {\n  position: absolute;\n  width: 120px;\n  height: 80px;\n  color: white;\n  padding: 6px;\n}\n.a {\n  left: 20px;\n  top: 20px;\n  background: #e4572e;\n}\n.b {\n  left: 70px;\n  top: 50px;\n  background: #2e86ab;\n}\n.c {\n  left: 120px;\n  top: 80px;\n  background: #4c956c;\n}\n${extra}`;
+    return { prompt: `Give ~.a~ a ~z-index~ of ${z[0]}, ~.b~ ${z[1]} and ~.c~ ${z[2]}, so the ${top} box ends up on top.`,
+      html: '<div class="box a">A</div>\n<div class="box b">B</div>\n<div class="box c">C</div>\n', focus: ['z-index'],
+      css: css(''), sol: css(`.a {\n  z-index: ${z[0]};\n}\n.b {\n  z-index: ${z[1]};\n}\n.c {\n  z-index: ${z[2]};\n}\n`) };
+  } },
+
+  // --------------------------------------------------------------- More CSS
+  { id: 'css-media', unit: 'More CSS', title: 'Media queries', lang: 'css', doc: 'css-media', gen(r) {
+    const bp = r.step(420, 600, 20);
+    const css = extra => BASE_CSS + `.layout {\n  display: flex;\n  gap: 8px;\n}\n.side {\n  background: #29335c;\n  color: white;\n  padding: 8px;\n  width: 120px;\n}\n.content {\n  flex: 1;\n  background: white;\n  padding: 8px;\n}\n.extra {\n  background: #f3a712;\n  padding: 8px;\n}\n${extra}`;
+    return { prompt: `On screens up to ${bp}px wide (~@media (max-width: …)~): stack ~.layout~ in a column, let ~.side~ go full width (~width: auto~), and hide ~.extra~. The 9:16 view is the narrow one.`,
+      html: `<div class="layout">\n  <aside class="side">Menu</aside>\n  <main class="content">${title2(r)}</main>\n  <div class="extra">Tips</div>\n</div>\n`,
+      focus: ['flex-direction', 'display', 'width'],
+      css: css(''), sol: css(`@media (max-width: ${bp}px) {\n  .layout {\n    flex-direction: column;\n  }\n  .side {\n    width: auto;\n  }\n  .extra {\n    display: none;\n  }\n}\n`) };
+  } },
+  { id: 'css-vars', unit: 'More CSS', title: 'Custom properties', lang: 'css', doc: 'css-vars', gen(r) {
+    const accent = r.pick(PALETTE), space = r.step(4, 20, 4), radius = r.step(0, 16, 4);
+    const css = root => BASE_CSS + `:root {\n${root}}\n.title {\n  color: var(--accent);\n}\n.buttons {\n  display: flex;\n  gap: var(--space);\n}\n.btn {\n  background: var(--accent);\n  color: white;\n  border: 0;\n  padding: var(--space);\n  border-radius: var(--radius);\n}\n`;
+    return { prompt: 'The rules already use ~var(--accent)~, ~var(--space)~ and ~var(--radius)~. Define those three on ~:root~ to match the target.',
+      html: `<h2 class="title">${title2(r)}</h2>\n<div class="buttons">\n  <button class="btn">Play</button>\n  <button class="btn">Options</button>\n</div>\n`,
+      focus: ['color', 'background-color', 'column-gap', 'padding-top', 'border-top-left-radius'],
+      css: css('  /* --accent, --space, --radius */\n'), sol: css(`  --accent: ${accent};\n  --space: ${space}px;\n  --radius: ${radius}px;\n`) };
+  } },
+  { id: 'css-selectors', unit: 'More CSS', title: 'Structural selectors', lang: 'css', doc: 'css-selectors', gen(r) {
+    const oe = r.pick(['odd', 'even']), [c1, c2] = r.sample(['#fde2e4', '#e2ece9', '#dfe7fd', '#fff1e6', '#e9f5db'], 2), c3 = r.pick(['#e4572e', '#2e86ab', '#a23b72', '#4c956c']);
+    void c2;
+    const css = extra => BASE_CSS + `.list li {\n  padding: 4px 8px;\n}\n${extra}`;
+    return { prompt: `Without touching the HTML: give the ${oe} items (~:nth-child(${oe})~) a background, make the first item bold, and color the last item’s text. Context has the colors.`,
+      html: `<ul class="list">\n${r.sample(ITEMS, 6).map(i => `  <li>${i}</li>`).join('\n')}\n</ul>\n`, focus: ['background-color', 'font-weight', 'color'],
+      css: css(''), sol: css(`.list li:nth-child(${oe}) {\n  background: ${c1};\n}\n.list li:first-child {\n  font-weight: bold;\n}\n.list li:last-child {\n  color: ${c3};\n}\n`) };
+  } },
+  { id: 'css-transform', unit: 'More CSS', title: 'Transforms', lang: 'css', doc: 'css-transform', gen(r) {
+    const deg = r.pick([-30, -20, -10, 15, 30, 45]), s = r.pick([0.75, 1.25, 1.5]);
+    const rule = extra => BASE_CSS + `.tile {\n  width: 120px;\n  height: 60px;\n  margin: 40px auto;\n  background: #8338ec;\n  color: white;\n  display: grid;\n  place-items: center;\n${extra}}\n`;
+    return { prompt: `Rotate ~.tile~ by ${deg}° and scale it to ${s}× with one ~transform~.`,
+      html: `<div class="tile">${r.pick(WORDS)}</div>\n`, focus: ['transform'],
+      css: rule(''), sol: rule(`  transform: rotate(${deg}deg) scale(${s});\n`) };
+  } },
+
+  // --------------------------------------------------------------- JavaScript
+  { id: 'js-math', unit: 'JavaScript', title: 'Variables and arithmetic', lang: 'js', doc: 'js-basics', gen() {
+    return { prompt: 'Using ~a~ and ~b~, log their sum, then their product, then the remainder of ~a~ divided by ~b~ (~%~), each with ~console.log~.',
+      given: r => ({ pre: `const a = ${r.int(10, 99)};\nconst b = ${r.int(2, 9)};\n` }),
+      js: '// a and b are defined above.\n', sol: 'console.log(a + b);\nconsole.log(a * b);\nconsole.log(a % b);\n' };
+  } },
+  { id: 'js-strings', unit: 'JavaScript', title: 'Template literals', lang: 'js', doc: 'js-strings', gen() {
+    return { prompt: 'Log ~<player> has <coins> coins~ using a template literal, then log the player’s name in capitals (~toUpperCase~).',
+      given: r => ({ pre: `const player = "${r.pick(NAMES)}";\nconst coins = ${r.int(2, 500)};\n` }),
+      js: '', sol: 'console.log(`${player} has ${coins} coins`);\nconsole.log(player.toUpperCase());\n' };
+  } },
+  { id: 'js-if', unit: 'JavaScript', title: 'Conditionals', lang: 'js', doc: 'js-if', gen(r) {
+    const gold = r.step(80, 95, 5), silver = gold - r.step(15, 30, 5), start = r.int(0, 2);
+    const score = (r2, i) => [r2.int(gold, 100), r2.int(silver, gold - 1), r2.int(0, silver - 1)][(start + i) % 3];
+    return { prompt: `Log ~"gold"~ if ~score~ is at least ${gold}, ~"silver"~ if it is at least ${silver}, and ~"bronze"~ otherwise.`,
+      given: (r2, i) => ({ pre: `const score = ${score(r2, i)};\n` }), alts: 2,
+      js: '', sol: `if (score >= ${gold}) {\n  console.log("gold");\n} else if (score >= ${silver}) {\n  console.log("silver");\n} else {\n  console.log("bronze");\n}\n` };
+  } },
+  { id: 'js-loops', unit: 'JavaScript', title: 'Loops', lang: 'js', doc: 'js-loops', gen() {
+    return { prompt: 'Count down: log ~start~, then keep subtracting ~step~ and logging while the number is above 0. Finish by logging ~"Liftoff!"~.',
+      given: r => ({ pre: `const start = ${r.int(8, 20)};\nconst step = ${r.int(2, 4)};\n` }),
+      js: '', sol: 'for (let n = start; n > 0; n -= step) {\n  console.log(n);\n}\nconsole.log("Liftoff!");\n' };
+  } },
+  { id: 'js-functions', unit: 'JavaScript', title: 'Functions', lang: 'js', doc: 'js-functions', gen() {
+    const call = r => { const lo = r.int(0, 20), hi = lo + r.int(5, 30); return [r.pick([lo - r.int(1, 9), hi + r.int(1, 9), r.int(lo, hi)]), lo, hi]; };
+    return { prompt: 'Finish ~clamp(value, min, max)~: return ~value~, but never less than ~min~ and never more than ~max~. The code after yours calls it.',
+      given: r => ({ post: Array.from({ length: 4 }, () => `console.log(clamp(${call(r).join(', ')}));`).join('\n') + '\n' }),
+      js: 'function clamp(value, min, max) {\n  // your code\n}\n', sol: 'function clamp(value, min, max) {\n  return Math.min(Math.max(value, min), max);\n}\n' };
+  } },
+  { id: 'js-arrays', unit: 'JavaScript', title: 'Array methods', lang: 'js', doc: 'js-arrays', gen() {
+    return { prompt: 'Log three things: the scores above ~limit~ (~filter~), every score doubled (~map~), and the total of all scores (~reduce~).',
+      given: r => ({ pre: `const scores = ${jsList(Array.from({ length: 6 }, () => r.int(10, 99)))};\nconst limit = ${r.step(40, 70, 10)};\n` }),
+      js: '', sol: 'console.log(scores.filter(s => s > limit));\nconsole.log(scores.map(s => s * 2));\nconsole.log(scores.reduce((sum, s) => sum + s, 0));\n' };
+  } },
+  { id: 'js-objects', unit: 'JavaScript', title: 'Objects', lang: 'js', doc: 'js-objects', gen() {
+    return { prompt: 'The hero takes ~damage~ (subtract it from ~hero.hp~) and picks up ~loot~ (push it onto ~hero.items~). Then log ~<name>: <hp> HP, <count> items~, and log the hero’s keys joined with ~", "~.',
+      given: r => ({ pre: `const hero = { name: "${r.pick(NAMES)}", hp: ${r.int(50, 100)}, items: ${jsList(r.sample(ITEMS, r.int(1, 3)))} };\nconst damage = ${r.int(5, 30)};\nconst loot = "${r.pick(ITEMS)}";\n` }),
+      js: '', sol: 'hero.hp -= damage;\nhero.items.push(loot);\nconsole.log(`${hero.name}: ${hero.hp} HP, ${hero.items.length} items`);\nconsole.log(Object.keys(hero).join(", "));\n' };
+  } },
+  { id: 'js-sort', unit: 'JavaScript', title: 'Sorting', lang: 'js', doc: 'js-arrays', gen() {
+    return { prompt: 'Log the players’ names from highest score to lowest, joined with ~", "~. Then log the name of the player with the lowest score.',
+      given: r => {
+        const names = r.sample(NAMES, r.int(4, 5)), scores = r.sample(Array.from({ length: 90 }, (_, i) => i + 10), names.length);
+        return { pre: `const players = [\n${names.map((n, i) => `  { name: "${n}", score: ${scores[i]} }`).join(',\n')}\n];\n` };
+      },
+      js: '', sol: 'const ranked = [...players].sort((a, b) => b.score - a.score);\nconsole.log(ranked.map(p => p.name).join(", "));\nconsole.log(ranked[ranked.length - 1].name);\n' };
+  } },
+  { id: 'js-json', unit: 'JavaScript', title: 'JSON', lang: 'js', doc: 'js-json', gen() {
+    return { prompt: 'Log ~save~ as a JSON string (~JSON.stringify~). Then parse ~text~ (~JSON.parse~) and log its ~level~ plus 1.',
+      given: r => ({ pre: `const save = { level: ${r.int(1, 30)}, coins: ${r.int(0, 999)}, name: "${r.pick(NAMES)}" };\nconst text = '{"level":${r.int(1, 30)},"coins":${r.int(0, 999)}}';\n` }),
+      js: '', sol: 'console.log(JSON.stringify(save));\nconst loaded = JSON.parse(text);\nconsole.log(loaded.level + 1);\n' };
+  } },
+  { id: 'js-classes', unit: 'JavaScript', title: 'Classes', lang: 'js', doc: 'js-classes', gen() {
+    return { prompt: 'Finish ~class Vec~: the constructor stores ~x~ and ~y~, ~add(other)~ returns a new ~Vec~ of the sums, and ~length()~ returns the distance from (0, 0) (~Math.hypot~).',
+      given: r => ({ post: `const a = new Vec(${r.int(-9, 9)}, ${r.int(-9, 9)});\nconst b = new Vec(${r.int(-9, 9)}, ${r.int(-9, 9)});\nconst c = a.add(b);\nconsole.log(c.x, c.y);\nconsole.log(a.length().toFixed(2));\nconsole.log(c instanceof Vec);\n` }),
+      js: 'class Vec {\n  constructor(x, y) {\n    // store x and y on this\n  }\n\n  // add(other)\n\n  // length()\n}\n',
+      sol: 'class Vec {\n  constructor(x, y) {\n    this.x = x;\n    this.y = y;\n  }\n\n  add(other) {\n    return new Vec(this.x + other.x, this.y + other.y);\n  }\n\n  length() {\n    return Math.hypot(this.x, this.y);\n  }\n}\n' };
+  } },
+
+  // --------------------------------------------------------------- DOM
+  { id: 'dom-text', unit: 'DOM', title: 'Changing text and style', lang: 'js', doc: 'dom-select', gen() {
+    return { prompt: 'Set the text of ~#title~ to ~title~ (~textContent~) and the text color of ~.note~ to ~noteColor~ (~style.color~).',
+      html: '<h1 id="title">Loading…</h1>\n<p class="note">Tip: collect every gem.</p>\n', focus: ['color'],
+      given: r => ({ pre: `const title = "${title2(r)}";\nconst noteColor = "${r.pick(PALETTE)}";\n` }),
+      js: '', sol: 'document.querySelector("#title").textContent = title;\ndocument.querySelector(".note").style.color = noteColor;\n' };
+  } },
+  { id: 'dom-create', unit: 'DOM', title: 'Creating elements', lang: 'js', doc: 'dom-create', gen() {
+    return { prompt: 'For each name in ~items~, create an ~<li>~ with that text and append it to ~#inventory~.',
+      html: '<h3>Inventory</h3>\n<ul id="inventory"></ul>\n',
+      given: r => ({ pre: `const items = ${jsList(r.sample(ITEMS, r.int(3, 5)))};\n` }),
+      js: '', sol: 'const list = document.querySelector("#inventory");\nfor (const item of items) {\n  const li = document.createElement("li");\n  li.textContent = item;\n  list.append(li);\n}\n' };
+  } },
+  { id: 'dom-classlist', unit: 'DOM', title: 'Classes from code', lang: 'js', doc: 'dom-classlist', gen() {
+    return { prompt: 'Add the class ~on~ to each cell whose index (counting from 0) is in ~lit~. ~querySelectorAll~ and ~classList.add~ will help.',
+      html: `<div class="cells">\n${Array.from({ length: 6 }, (_, i) => `  <div class="cell">${i + 1}</div>`).join('\n')}\n</div>\n`,
+      css: BASE_CSS + '.cells {\n  display: flex;\n  gap: 6px;\n}\n.cell {\n  width: 40px;\n  height: 40px;\n  display: grid;\n  place-items: center;\n  background: #ddd;\n}\n.cell.on {\n  background: #f3a712;\n  font-weight: bold;\n}\n',
+      given: r => ({ pre: `const lit = ${jsList(r.sample([0, 1, 2, 3, 4, 5], r.int(2, 3)).sort())};\n` }),
+      js: '', sol: 'const cells = document.querySelectorAll(".cell");\nfor (const i of lit) {\n  cells[i].classList.add("on");\n}\n' };
+  } },
+  { id: 'dom-click', unit: 'DOM', title: 'Click events', lang: 'js', doc: 'dom-events', gen() {
+    const start = 'const button = document.querySelector("#add");\nconst scoreEl = document.querySelector("#score");\nlet score = 0;\n';
+    return { prompt: 'Each click on ~#add~ should add ~AMOUNT~ to the score and show it in ~#score~. The test clicks the button a few times.',
+      html: '<button id="add">Add</button>\n<p>Score: <span id="score">0</span></p>\n',
+      given: r => ({ pre: `const AMOUNT = ${r.int(2, 9)};\n`, actions: Array.from({ length: r.int(2, 5) }, () => ({ click: '#add' })) }),
+      js: start + '// listen for "click" on the button\n', sol: start + 'button.addEventListener("click", () => {\n  score += AMOUNT;\n  scoreEl.textContent = score;\n});\n' };
+  } },
+  { id: 'dom-input', unit: 'DOM', title: 'Input events', lang: 'js', doc: 'dom-events', gen() {
+    const start = 'const input = document.querySelector("#name");\nconst greeting = document.querySelector("#greeting");\n';
+    return { prompt: 'Whenever ~#name~ changes (the ~input~ event), set ~#greeting~ to ~Welcome, <NAME>!~ with the name in capitals. The test types a name.',
+      html: '<label>Name <input id="name"></label>\n<p id="greeting">Type your name</p>\n',
+      given: r => ({ actions: [{ input: ['#name', r.pick(NAMES)] }] }),
+      js: start, sol: start + 'input.addEventListener("input", () => {\n  greeting.textContent = "Welcome, " + input.value.toUpperCase() + "!";\n});\n' };
+  } },
+  { id: 'dom-keys', unit: 'DOM', title: 'Keyboard controls', lang: 'js', doc: 'dom-keys', gen() {
+    const start = 'const player = document.querySelector("#player");\nlet x = 140;\nlet y = 90;\nfunction draw() {\n  player.style.left = x + "px";\n  player.style.top = y + "px";\n}\ndraw();\n';
+    const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+    return { prompt: 'Move ~#player~ by ~STEP~ pixels on each arrow key (~keydown~, ~event.key~), then call ~draw()~. The test presses a few keys.',
+      html: '<div id="arena"><div id="player"></div></div>\n',
+      css: BASE_CSS + '#arena {\n  position: relative;\n  width: 300px;\n  height: 200px;\n  background: #e8ecf4;\n}\n#player {\n  position: absolute;\n  width: 20px;\n  height: 20px;\n  background: #e4572e;\n}\n',
+      given: r => ({ pre: `const STEP = ${r.step(10, 30, 5)};\n`, actions: Array.from({ length: r.int(3, 6) }, () => ({ key: r.pick(keys) })) }),
+      js: start + '// listen for "keydown" on document\n',
+      sol: start + 'document.addEventListener("keydown", event => {\n  if (event.key === "ArrowLeft") x -= STEP;\n  if (event.key === "ArrowRight") x += STEP;\n  if (event.key === "ArrowUp") y -= STEP;\n  if (event.key === "ArrowDown") y += STEP;\n  draw();\n});\n' };
+  } },
+  { id: 'dom-render', unit: 'DOM', title: 'Rendering from state', lang: 'js', doc: 'dom-create', gen() {
+    const tasks = ['Collect coins', 'Beat the boss', 'Find the key', 'Save the cat', 'Upgrade sword', 'Visit the shop'];
+    return { prompt: 'Finish ~render()~: one ~<li>~ per todo (with the class ~done~ when ~todo.done~), and ~#left~ says ~<n> left~, counting the todos not done.',
+      html: '<ul id="list"></ul>\n<p id="left"></p>\n', css: BASE_CSS + '.done {\n  text-decoration: line-through;\n  color: #999;\n}\n',
+      given: r => ({ pre: `const todos = [\n${r.sample(tasks, r.int(3, 5)).map(t => `  { text: "${t}", done: ${r.bool()} }`).join(',\n')}\n];\n`, post: 'render();\n' }),
+      js: 'function render() {\n  const list = document.querySelector("#list");\n  list.innerHTML = "";\n  // your code\n}\n',
+      sol: 'function render() {\n  const list = document.querySelector("#list");\n  list.innerHTML = "";\n  for (const todo of todos) {\n    const li = document.createElement("li");\n    li.textContent = todo.text;\n    if (todo.done) li.classList.add("done");\n    list.append(li);\n  }\n  const left = todos.filter(todo => !todo.done).length;\n  document.querySelector("#left").textContent = left + " left";\n}\n' };
+  } },
+  { id: 'dom-storage', unit: 'DOM', title: 'Saving with localStorage', lang: 'js', doc: 'dom-storage', gen(r) {
+    const start = r.int(0, 1);
+    return { prompt: 'Read ~"best"~ from ~localStorage~ (it comes back as a string). If ~runScore~ beats it, save ~runScore~ as the new best. Then log ~Best: <best>~.',
+      given: (r2, i) => {
+        const best = r2.int(200, 800), beat = (start + i) % 2 === 0, run = beat ? best + r2.int(1, 199) : best - r2.int(1, 199);
+        return { pre: `localStorage.setItem("best", "${best}");\nconst runScore = ${run};\n` };
+      },
+      js: '', sol: 'let best = Number(localStorage.getItem("best"));\nif (runScore > best) {\n  best = runScore;\n  localStorage.setItem("best", String(best));\n}\nconsole.log("Best: " + localStorage.getItem("best"));\n' };
+  } },
+
+  // --------------------------------------------------------------- Async
+  { id: 'async-wait', unit: 'Async', title: 'Promises and timers', lang: 'js', doc: 'js-promises', gen(r) {
+    const d = r.step(100, 300, 50);
+    return { prompt: 'Finish ~wait(ms)~ so it returns a ~Promise~ that resolves after ~ms~ milliseconds (~setTimeout~). The code after yours awaits it.',
+      given: () => ({ post: `(async () => {\n  console.log("ready");\n  const started = Date.now();\n  await wait(${d});\n  console.log(Date.now() - started >= ${d - 5} ? "waited" : "too soon");\n  console.log("go!");\n})();\n` }),
+      alts: 0, settle: d + 150, js: 'function wait(ms) {\n  // your code\n}\n', sol: 'function wait(ms) {\n  return new Promise(resolve => setTimeout(resolve, ms));\n}\n' };
+  } },
+  { id: 'async-await', unit: 'Async', title: 'async and await', lang: 'js', doc: 'js-async', gen() {
+    return { prompt: 'Write ~async function start()~ that awaits ~loadLevel(first)~ and ~loadLevel(second)~, logs each level’s ~name~, then logs their total ~enemies~.',
+      given: r => {
+        const levels = r.sample(['Caves', 'Ruins', 'Swamp', 'Citadel', 'Peaks', 'Docks'], 4).map(name => ({ name, enemies: r.int(2, 20) }));
+        const [a, b] = r.sample([0, 1, 2, 3], 2);
+        return { pre: `const LEVELS = ${JSON.stringify(levels)};\nfunction loadLevel(n) {\n  return new Promise(resolve => setTimeout(() => resolve(LEVELS[n]), 20));\n}\nconst first = ${a};\nconst second = ${b};\n`, post: 'start();\n' };
+      },
+      settle: 250, js: '', sol: 'async function start() {\n  const a = await loadLevel(first);\n  console.log(a.name);\n  const b = await loadLevel(second);\n  console.log(b.name);\n  console.log(a.enemies + b.enemies);\n}\n' };
+  } },
+  { id: 'async-errors', unit: 'Async', title: 'Handling failures', lang: 'js', doc: 'js-async', gen() {
+    return { prompt: 'Write ~async function loadOrNew(slot)~: return ~await loadSave(slot)~, but if that throws, log ~No save in slot <slot>~ and return ~{ level: 1 }~ (~try~/~catch~).',
+      given: r => {
+        const [good, bad] = r.sample([1, 2, 3], 2), level = r.int(2, 40);
+        return { pre: `const saves = { ${good}: { level: ${level} } };\nfunction loadSave(slot) {\n  return new Promise((resolve, reject) => setTimeout(() => {\n    if (slot in saves) resolve(saves[slot]);\n    else reject(new Error("empty slot " + slot));\n  }, 10));\n}\n`,
+          post: `(async () => {\n  console.log((await loadOrNew(${good})).level);\n  console.log((await loadOrNew(${bad})).level);\n})();\n` };
+      },
+      settle: 200, js: '', sol: 'async function loadOrNew(slot) {\n  try {\n    return await loadSave(slot);\n  } catch (error) {\n    console.log("No save in slot " + slot);\n    return { level: 1 };\n  }\n}\n' };
+  } },
+
+  // --------------------------------------------------------------- Canvas
+  { id: 'canvas-rect', unit: 'Canvas', title: 'Drawing rectangles', lang: 'js', doc: 'canvas', gen(r) {
+    const bg = r.pick(['#fefae0', '#e9f5db', '#edf2fb', '#fff1e6']), c = r.pick(PALETTE), w = r.step(40, 140, 10), h = r.step(30, 100, 10), x = r.step(10, 300 - w, 10), y = r.step(10, 170 - h, 10);
+    return { prompt: `Fill the whole canvas with ${bg}, then draw a ${w}×${h} rectangle at (${x}, ${y}) in ${c} (~fillStyle~, ~fillRect~).`,
+      html: CANVAS_HTML, css: CANVAS_CSS, js: CANVAS_START,
+      sol: CANVAS_START + `ctx.fillStyle = "${bg}";\nctx.fillRect(0, 0, canvas.width, canvas.height);\nctx.fillStyle = "${c}";\nctx.fillRect(${x}, ${y}, ${w}, ${h});\n` };
+  } },
+  { id: 'canvas-circles', unit: 'Canvas', title: 'Circles in a loop', lang: 'js', doc: 'canvas', gen(r) {
+    const c = r.pick(PALETTE), start = CANVAS_START + `ctx.fillStyle = "${c}";\n`;
+    return { prompt: 'Draw ~count~ circles of ~radius~ in a row along y = 90 (~arc~, ~fill~). The first center is at x = ~gap + radius~; each next center is ~2 * radius + gap~ further right.',
+      html: CANVAS_HTML, css: CANVAS_CSS,
+      given: r2 => {
+        const count = r2.int(3, 6), gap = r2.int(6, 16), radius = Math.min(r2.int(10, 24), Math.floor((320 - gap) / count / 2 - gap / 2));
+        return { pre: `const count = ${count};\nconst radius = ${radius};\nconst gap = ${gap};\n` };
+      },
+      js: start, sol: start + 'for (let i = 0; i < count; i++) {\n  const x = gap + radius + i * (2 * radius + gap);\n  ctx.beginPath();\n  ctx.arc(x, 90, radius, 0, Math.PI * 2);\n  ctx.fill();\n}\n' };
+  } },
+  { id: 'canvas-grid', unit: 'Canvas', title: 'A checkerboard', lang: 'js', doc: 'canvas', gen() {
+    const start = CANVAS_START + 'const light = "#eeeeee";\nconst dark = "#333333";\n';
+    return { prompt: 'Draw a ~cols~ × ~rows~ checkerboard of ~size~ × ~size~ squares from the top-left corner. The top-left square is ~light~ and neighbors alternate.',
+      html: CANVAS_HTML, css: CANVAS_CSS,
+      given: r => {
+        const cols = r.int(4, 8), rows = r.int(3, 5), size = Math.min(r.int(16, 36), Math.floor(320 / cols), Math.floor(180 / rows));
+        return { pre: `const cols = ${cols};\nconst rows = ${rows};\nconst size = ${size};\n` };
+      },
+      js: start, sol: start + 'for (let row = 0; row < rows; row++) {\n  for (let col = 0; col < cols; col++) {\n    ctx.fillStyle = (row + col) % 2 === 0 ? light : dark;\n    ctx.fillRect(col * size, row * size, size, size);\n  }\n}\n' };
+  } },
+
+  // --------------------------------------------------------------- Game logic
+  { id: 'game-loop', unit: 'Game logic', title: 'The game loop', lang: 'js', doc: 'game-loop', gen() {
+    return { prompt: 'Start a loop with ~requestAnimationFrame(frame)~. In ~frame(time)~, call ~update(dt)~ with the seconds since the previous frame (skip the very first frame), remember ~time~, and ask for the next frame.',
+      given: r => ({ pre: `// A stand-in requestAnimationFrame: the code after yours plays 5 frames.\nconst queue = [];\nwindow.requestAnimationFrame = callback => queue.push(callback);\nfunction update(dt) {\n  console.log("update " + dt.toFixed(3));\n}\n`,
+        post: `let time = 1000;\nfor (let i = 0; i < 5 && queue.length; i++) {\n  queue.shift()(time);\n  time += ${r.pick([16, 20, 25, 33, 50])};\n}\n` }),
+      js: '', sol: 'let last = null;\nfunction frame(time) {\n  if (last !== null) update((time - last) / 1000);\n  last = time;\n  requestAnimationFrame(frame);\n}\nrequestAnimationFrame(frame);\n' };
+  } },
+  { id: 'game-update', unit: 'Game logic', title: 'Movement and bouncing', lang: 'js', doc: 'game-loop', gen() {
+    return { prompt: 'Finish ~update(ball, dt)~: move ~ball.x~ by ~ball.vx * dt~. If it ends up below 0 or above ~WIDTH~, put it back on that edge and reverse ~vx~.',
+      given: r => ({ pre: `const WIDTH = ${r.step(100, 300, 50)};\n`,
+        post: `const ball = { x: ${r.int(10, 90)}, vx: ${r.pick([-1, 1]) * r.step(80, 300, 20)} };\nfor (let i = 0; i < 8; i++) {\n  update(ball, 0.25);\n  console.log(ball.x.toFixed(1), ball.vx);\n}\n` }),
+      js: '// ball is { x, vx } in pixels and pixels per second; dt is in seconds.\nfunction update(ball, dt) {\n  // your code\n}\n',
+      sol: 'function update(ball, dt) {\n  ball.x += ball.vx * dt;\n  if (ball.x < 0) {\n    ball.x = 0;\n    ball.vx = -ball.vx;\n  } else if (ball.x > WIDTH) {\n    ball.x = WIDTH;\n    ball.vx = -ball.vx;\n  }\n}\n' };
+  } },
+  { id: 'game-collide', unit: 'Game logic', title: 'Collision boxes', lang: 'js', doc: 'collision', gen() {
+    const box = r => ({ x: r.int(0, 20), y: r.int(0, 20), w: r.int(2, 10), h: r.int(2, 10) });
+    return { prompt: 'Finish ~overlaps(a, b)~ for rectangles ~{ x, y, w, h }~: return ~true~ when they overlap. Edges that only touch do not count.',
+      given: r => {
+        const pairs = Array.from({ length: 5 }, () => [box(r), box(r)]);
+        const a = box(r); pairs.push([a, { x: a.x + a.w, y: a.y, w: 3, h: 3 }]);
+        return { post: pairs.map(([p, q]) => `console.log(overlaps(${JSON.stringify(p)}, ${JSON.stringify(q)}));`).join('\n') + '\n' };
+      },
+      js: 'function overlaps(a, b) {\n  // your code\n}\n', sol: 'function overlaps(a, b) {\n  return a.x < b.x + b.w && b.x < a.x + a.w &&\n         a.y < b.y + b.h && b.y < a.y + a.h;\n}\n' };
+  } },
+  { id: 'game-state', unit: 'Game logic', title: 'Game states', lang: 'js', doc: 'state-machine', gen() {
+    return { prompt: 'Finish ~nextState(state, event)~. menu + start → playing; playing + pause → paused; paused + pause → playing; playing + die → gameover; gameover + start → playing. Anything else stays in the same state.',
+      given: r => ({ post: `let state = "menu";\nfor (const event of ${jsList(['start', ...Array.from({ length: 8 }, () => r.pick(['start', 'pause', 'pause', 'die', 'jump']))])}) {\n  state = nextState(state, event);\n  console.log(event + " → " + state);\n}\n` }),
+      js: '// States: "menu", "playing", "paused", "gameover"\nfunction nextState(state, event) {\n  // your code\n}\n',
+      sol: 'function nextState(state, event) {\n  if (event === "start" && (state === "menu" || state === "gameover")) return "playing";\n  if (event === "pause" && state === "playing") return "paused";\n  if (event === "pause" && state === "paused") return "playing";\n  if (event === "die" && state === "playing") return "gameover";\n  return state;\n}\n' };
+  } },
+
+  // --------------------------------------------------------------- PWA
+  { id: 'pwa-manifest', unit: 'PWA', title: 'The web app manifest', lang: 'js', doc: 'pwa-manifest', gen() {
+    return { prompt: 'Build ~manifest~: ~name~ is ~appName~, ~short_name~ its first word, ~start_url~ ~"./"~, ~display~ ~"standalone"~, ~theme_color~ and ~background_color~ are ~color~, and ~icons~ lists ~icon-192.png~ (192x192) and ~icon-512.png~ (512x512), both ~image/png~.',
+      given: r => ({ pre: `const appName = "${title2(r)}";\nconst color = "${r.pick(PALETTE)}";\n`,
+        post: 'console.log(manifest.name + " | " + manifest.short_name + " | " + manifest.start_url + " | " + manifest.display);\nconsole.log(manifest.theme_color + " " + manifest.background_color);\nconsole.log((manifest.icons || []).map(icon => icon.src + " " + icon.sizes + " " + icon.type).join(", "));\n' }),
+      js: 'const manifest = {\n  // your fields\n};\n',
+      sol: 'const manifest = {\n  name: appName,\n  short_name: appName.split(" ")[0],\n  start_url: "./",\n  display: "standalone",\n  theme_color: color,\n  background_color: color,\n  icons: [\n    { src: "icon-192.png", sizes: "192x192", type: "image/png" },\n    { src: "icon-512.png", sizes: "512x512", type: "image/png" },\n  ],\n};\n' };
+  } },
+  { id: 'pwa-register', unit: 'PWA', title: 'Registering a service worker', lang: 'js', doc: 'pwa-register', gen() {
+    return { prompt: 'If ~"serviceWorker" in navigator~, wait for the window’s ~load~ event, register ~"sw.js"~ with ~{ scope: "./" }~, then log ~SW scope: <registration.scope>~.',
+      given: r => ({ pre: `// A stand-in navigator.serviceWorker for this page.\nconst SITE = "https://${r.pick(['example.com', 'play.example.org', 'games.example.net'])}/${r.pick(WORDS).toLowerCase()}/";\nObject.defineProperty(navigator, "serviceWorker", { configurable: true, value: {\n  register(url, options) {\n    console.log("register " + url);\n    return Promise.resolve({ scope: new URL((options && options.scope) || "./", SITE).href });\n  },\n} });\n` }),
+      js: '', sol: 'if ("serviceWorker" in navigator) {\n  window.addEventListener("load", () => {\n    navigator.serviceWorker.register("sw.js", { scope: "./" })\n      .then(registration => console.log("SW scope: " + registration.scope));\n  });\n}\n' };
+  } },
+  { id: 'pwa-install', unit: 'PWA', title: 'Caching on install', lang: 'js', doc: 'pwa-cache', gen() {
+    return { prompt: 'In the ~install~ handler, call ~event.waitUntil(…)~ with a promise that opens the cache named ~CACHE~ (~caches.open~) and adds every file in ~FILES~ (~cache.addAll~).',
+      given: r => ({ pre: `const CACHE = "${r.pick(WORDS).toLowerCase()}-v${r.int(1, 9)}";\nconst FILES = ${jsList(['./', './index.html', ...r.sample(['./app.js', './style.css', './icon-192.png', './levels.json', './sfx.mp3'], 2)])};\n// A stand-in Cache Storage for this page.\nObject.defineProperty(window, "caches", { configurable: true, value: {\n  open(name) {\n    console.log("open " + name);\n    return Promise.resolve({ addAll: list => { console.log("addAll " + list.join(" ")); return Promise.resolve(); } });\n  },\n} });\n`,
+        post: 'const installEvent = new Event("install");\ninstallEvent.waitUntil = work => Promise.resolve(work).then(() => console.log("installed"));\nself.dispatchEvent(installEvent);\n' }),
+      settle: 80, js: 'self.addEventListener("install", event => {\n  // your code\n});\n',
+      sol: 'self.addEventListener("install", event => {\n  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));\n});\n' };
+  } },
+  { id: 'pwa-fetch', unit: 'PWA', title: 'Cache first, then network', lang: 'js', doc: 'pwa-cache', gen() {
+    return { prompt: 'In the ~fetch~ handler, call ~event.respondWith(…)~ with the cached response if ~caches.match(event.request)~ finds one, otherwise ~fetch(event.request)~.',
+      given: r => {
+        const urls = r.sample(['/index.html', '/app.js', '/style.css', '/icon.png', '/levels.json'], 4), hits = r.sample(urls, 2);
+        const cached = Object.fromEntries(hits.map(u => [u, 'cached copy']));
+        return { pre: `// Stand-ins for the cache and the network.\nconst cached = ${JSON.stringify(cached)};\nObject.defineProperty(window, "caches", { configurable: true, value: {\n  match: request => Promise.resolve(cached[request.url]),\n} });\nwindow.fetch = request => Promise.resolve("network copy");\n`,
+          post: `(async () => {\n  for (const url of ${jsList(urls)}) {\n    await new Promise(done => {\n      const event = new Event("fetch");\n      event.request = { url };\n      event.respondWith = response => Promise.resolve(response).then(body => { console.log(url + " ← " + body); done(); });\n      self.dispatchEvent(event);\n      setTimeout(done, 150);\n    });\n  }\n})();\n` };
+      },
+      settle: 700, js: 'self.addEventListener("fetch", event => {\n  // your code\n});\n',
+      sol: 'self.addEventListener("fetch", event => {\n  event.respondWith(\n    caches.match(event.request).then(cached => cached || fetch(event.request))\n  );\n});\n' };
+  } },
+  { id: 'pwa-activate', unit: 'PWA', title: 'Cleaning up old caches', lang: 'js', doc: 'pwa-cache', gen() {
+    return { prompt: 'In the ~activate~ handler, use ~event.waitUntil(…)~ to delete every cache whose name is not ~CACHE~ (~caches.keys()~, then ~caches.delete(name)~ for each old one).',
+      given: r => {
+        const app = r.pick(WORDS).toLowerCase(), v = r.int(3, 9), names = r.shuffle([`${app}-v${v}`, `${app}-v${v - 1}`, `${app}-v${v - 2}`, ...r.sample(['images-v1', 'old-sounds'], r.int(0, 1))]);
+        return { pre: `const CACHE = "${app}-v${v}";\n// A stand-in Cache Storage that already holds these caches.\nconst existing = ${jsList(names)};\nObject.defineProperty(window, "caches", { configurable: true, value: {\n  keys: () => Promise.resolve(existing.slice()),\n  delete: name => { console.log("delete " + name); return Promise.resolve(true); },\n} });\n`,
+          post: 'const activateEvent = new Event("activate");\nactivateEvent.waitUntil = work => Promise.resolve(work).then(() => console.log("activated"));\nself.dispatchEvent(activateEvent);\n' };
+      },
+      settle: 80, js: 'self.addEventListener("activate", event => {\n  // your code\n});\n',
+      sol: 'self.addEventListener("activate", event => {\n  event.waitUntil(\n    caches.keys().then(names => Promise.all(\n      names.filter(name => name !== CACHE).map(name => caches.delete(name))\n    ))\n  );\n});\n' };
+  } },
+  { id: 'pwa-online', unit: 'PWA', title: 'Online and offline', lang: 'js', doc: 'pwa-online', gen() {
+    const start = 'const statusEl = document.querySelector("#status");\n';
+    return { prompt: 'Show ~Online~ or ~Offline~ in ~#status~ from ~navigator.onLine~, and toggle the class ~offline~ on ~<body>~ to match. Do it now and on every ~online~ and ~offline~ event.',
+      html: '<p>Status: <strong id="status">?</strong></p>\n', css: BASE_CSS + 'body.offline {\n  background: #fde2e2;\n}\n',
+      given: r => {
+        const first = r.bool(), steps = Array.from({ length: r.int(1, 3) }, () => r.bool());
+        return { pre: `// A stand-in for the network state. The test calls setOnline(true or false).\nlet online = ${first};\nObject.defineProperty(navigator, "onLine", { configurable: true, get: () => online });\nfunction setOnline(value) {\n  online = value;\n  window.dispatchEvent(new Event(value ? "online" : "offline"));\n}\n`,
+          actions: steps.map(v => ({ call: ['setOnline', v] })) };
+      },
+      alts: 2, js: start,
+      sol: start + 'function showStatus() {\n  statusEl.textContent = navigator.onLine ? "Online" : "Offline";\n  document.body.classList.toggle("offline", !navigator.onLine);\n}\nshowStatus();\nwindow.addEventListener("online", showStatus);\nwindow.addEventListener("offline", showStatus);\n' };
+  } },
+];
+const TEMPLATE_BY_ID = new Map(TEMPLATES.map(t => [t.id, t]));
+
+// =============================================================================
+// Reference pages for the Hint button. MDN refuses to load inside other sites,
+// so the essentials live here, with a link out for the full story.
+// =============================================================================
+
+const MDN = 'https://developer.mozilla.org/en-US/docs/';
+const DOCS = {
+  'html-text': { t: 'Headings and text', mdn: 'Web/HTML/Element/Heading_Elements',
+    p: ['<h1> to <h6> are headings, from most to least important. Use one <h1> per page and do not skip levels for looks; style sizes with CSS instead.', '<p> is a paragraph. Inside text, <strong> marks importance (bold by default) and <em> marks stress emphasis (italic by default).'],
+    code: '<h1>Star Forge</h1>\n<h2>Level 1</h2>\n<p>Press <strong>space</strong> to <em>jump</em>.</p>' },
+  'html-lists': { t: 'Lists', mdn: 'Web/HTML/Element/ul',
+    p: ['<ul> is an unordered (bulleted) list and <ol> an ordered (numbered) one. Each item is an <li>, and only <li> elements go directly inside.'],
+    code: '<ol>\n  <li>Find the key</li>\n  <li>Open the door</li>\n</ol>' },
+  'html-links': { t: 'Links', mdn: 'Web/HTML/Element/a',
+    p: ['<a href="…"> makes a link. href can be a full URL, a path on the same site, or #id to jump within the page. Add target="_blank" rel="noopener" to open a new tab.'],
+    code: '<p>Read the <a href="https://example.com/rules">rules</a>.</p>' },
+  'html-forms': { t: 'Forms and inputs', mdn: 'Web/HTML/Element/input',
+    p: ['<input> is a self-closing field; its type sets the kind (text, number, checkbox, range…). placeholder shows hint text while empty.', 'A <label for="id"> names the input with that id, so clicking the label focuses the field and screen readers announce it. <button> makes a button.'],
+    code: '<label for="name">Player name</label>\n<input id="name" placeholder="e.g. Nova">\n<button>Start</button>' },
+  'html-semantic': { t: 'Page structure', mdn: 'Web/HTML/Element/main',
+    p: ['Semantic elements say what a region is: <header> for introductory content, <nav> for navigation, <main> for the main content (once per page), <section> and <article> for parts, <aside> for side content and <footer> for closing info.', 'They behave like <div> by default, but browsers, search engines and assistive tech understand them.'],
+    code: '<header><h1>Game</h1></header>\n<main>…</main>\n<footer>© 2026</footer>' },
+  'html-canvas': { t: 'The canvas element', mdn: 'Web/HTML/Element/canvas',
+    p: ['<canvas> is a bitmap you draw on from JavaScript. Its width and height attributes set the drawing resolution in pixels (default 300×150). CSS width/height only stretch it on screen.'],
+    code: '<canvas id="game" width="320" height="180"></canvas>' },
+  'css-colors': { t: 'Colors', mdn: 'Web/CSS/color_value',
+    p: ['color sets the text color; background-color the background. Colors can be names (tomato), hex (#ff6347 or #f64), rgb(255 99 71), or hsl(9 100% 64%). Add an alpha for transparency: #ff634780 or rgb(255 99 71 / 50%).'],
+    code: '.box {\n  color: #fefae0;\n  background-color: #29335c;\n}' },
+  'css-fonts': { t: 'Fonts', mdn: 'Web/CSS/font-family',
+    p: ['font-family takes a list of fonts, tried in order; end it with a generic family (serif, sans-serif, monospace, system-ui). Quote names with spaces.', 'font-size sets the size (px, rem, em…), font-weight the thickness (normal, bold or 100–900), and font-style normal or italic.'],
+    code: '.title {\n  font-family: "Trebuchet MS", sans-serif;\n  font-size: 28px;\n  font-weight: bold;\n  font-style: italic;\n}' },
+  'css-text': { t: 'Text layout', mdn: 'Web/CSS/text-align',
+    p: ['text-align lines text up inside its box (left, center, right, justify). text-transform changes case for display only (uppercase, lowercase, capitalize). letter-spacing adds space between characters.'],
+    code: '.tagline {\n  text-align: center;\n  text-transform: uppercase;\n  letter-spacing: 3px;\n}' },
+  'css-box': { t: 'The box model', mdn: 'Learn/CSS/Building_blocks/The_box_model',
+    p: ['Every element is a box: content, then padding (inside the border, takes the background), then border, then margin (outside, transparent).', 'Shorthands take 1 to 4 values, clockwise from the top: margin: 8px 16px is 8px top and bottom, 16px left and right. border: 2px solid red sets width, style and color.', 'Vertical margins between blocks collapse: the larger one wins.'],
+    code: '.card {\n  margin: 16px;\n  padding: 12px 20px;\n  border: 3px solid #2e86ab;\n}' },
+  'css-radius': { t: 'Corners and shadows', mdn: 'Web/CSS/box-shadow',
+    p: ['border-radius rounds corners (one value for all four, or one per corner). box-shadow takes x offset, y offset, blur, optional spread, and color.'],
+    code: '.card {\n  border-radius: 12px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n}' },
+  'css-sizing': { t: 'Sizing and box-sizing', mdn: 'Web/CSS/box-sizing',
+    p: ['By default (content-box), width and height size only the content; padding and border are added on top. With box-sizing: border-box, width and height include padding and border, which is what most layouts want.', 'Many stylesheets start with *, *::before, *::after { box-sizing: border-box; }.'],
+    code: '.panel {\n  box-sizing: border-box;\n  width: 200px;   /* 200px on screen */\n  padding: 20px;\n  border: 4px solid;\n}' },
+  'css-units': { t: 'Units', mdn: 'Learn/CSS/Building_blocks/Values_and_units',
+    p: ['px is a fixed CSS pixel. % is relative to the parent (for width, the parent’s width). vw and vh are 1% of the viewport’s width and height. rem is relative to the root font size (usually 16px); em to the element’s own font size.', 'Relative units let one layout fit phones and desktops.'],
+    code: '.hero { height: 30vh; }\n.bar { width: 50%; }\n.title { font-size: 1.5rem; }  /* 24px */' },
+  'css-display': { t: 'display', mdn: 'Web/CSS/display',
+    p: ['block boxes start on a new line and fill the width. inline boxes flow inside text and ignore width/height. inline-block flows like text but accepts width, height and vertical padding. none removes the element from layout.', 'flex and grid make the element a layout container for its children.'],
+    code: '.tag {\n  display: inline-block;\n  width: 80px;\n  text-align: center;\n}' },
+  'css-flex': { t: 'Flexbox', mdn: 'Learn/CSS/CSS_layout/Flexbox',
+    p: ['display: flex lays children out in a row (flex-direction: column for a column). justify-content spreads items along that main axis (flex-start, center, flex-end, space-between, space-around, space-evenly); align-items lines them up across it (stretch by default).', 'gap puts space between items. flex: 1 on an item makes it grow to take the free space.'],
+    code: '.row {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 8px;\n}\n.search { flex: 1; }' },
+  'css-grid': { t: 'Grid', mdn: 'Learn/CSS/CSS_layout/Grids',
+    p: ['display: grid with grid-template-columns defines columns. fr is a share of the free space, so repeat(3, 1fr) is three equal columns. gap spaces rows and columns.', 'An item can cover several cells with grid-column: span 2 or grid-row: span 2.'],
+    code: '.grid {\n  display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 8px;\n}\n.wide { grid-column: span 2; }' },
+  'css-position': { t: 'Positioning', mdn: 'Web/CSS/position',
+    p: ['position: relative keeps an element in the flow and makes it the reference for absolute children. position: absolute takes an element out of the flow and places it with top, right, bottom and left, measured from the nearest positioned ancestor.', 'position: fixed places it relative to the viewport, so it stays put when the page scrolls. Setting both left: 0 and right: 0 stretches it across.'],
+    code: '.card { position: relative; }\n.badge { position: absolute; top: 8px; right: 8px; }\n.toolbar { position: fixed; left: 0; right: 0; bottom: 0; }' },
+  'css-zindex': { t: 'z-index', mdn: 'Web/CSS/z-index',
+    p: ['Positioned elements (and flex or grid items) can be stacked with z-index: higher numbers are drawn on top. Without z-index, later elements in the HTML are drawn over earlier ones.'],
+    code: '.modal { position: fixed; z-index: 10; }' },
+  'css-media': { t: 'Media queries', mdn: 'Web/CSS/CSS_media_queries/Using_media_queries',
+    p: ['@media wraps rules that apply only when a condition is true. (max-width: 600px) means the viewport is at most 600px wide; (min-width: …) is the opposite. (orientation: portrait) and (prefers-color-scheme: dark) are useful too.'],
+    code: '@media (max-width: 600px) {\n  .layout { flex-direction: column; }\n  .extra { display: none; }\n}' },
+  'css-vars': { t: 'Custom properties', mdn: 'Web/CSS/Using_CSS_custom_properties',
+    p: ['Properties that start with -- are variables. Define them on a selector (:root makes them global) and read them with var(--name). Children inherit them, and they can be changed from JavaScript with element.style.setProperty("--name", value).'],
+    code: ':root {\n  --accent: #e4572e;\n  --space: 8px;\n}\n.btn {\n  background: var(--accent);\n  padding: var(--space);\n}' },
+  'css-selectors': { t: 'Selectors', mdn: 'Web/CSS/CSS_selectors',
+    p: ['.class, #id and tag select elements; a space selects descendants and > direct children. Pseudo-classes pick by position or state: :first-child, :last-child, :nth-child(odd), :nth-child(3n), :hover, :focus.'],
+    code: '.list li:nth-child(even) { background: #eee; }\n.list li:first-child { font-weight: bold; }' },
+  'css-transform': { t: 'Transforms', mdn: 'Web/CSS/transform',
+    p: ['transform moves, turns or resizes an element without changing the layout around it: translate(x, y), rotate(30deg), scale(1.5). Several functions can be combined in one transform; they apply right to left.', 'Transforms are cheap to animate, which makes them good for games and UI motion.'],
+    code: '.tile { transform: rotate(15deg) scale(1.2); }' },
+  'js-basics': { t: 'Variables and arithmetic', mdn: 'Learn/JavaScript/First_steps/Math',
+    p: ['const declares a value you will not reassign; let one you will. Arithmetic uses + - * / and % (remainder). console.log(…) prints to the console, which is where these cards check your results.'],
+    code: 'const a = 7;\nlet total = a * 3;\ntotal += 1;\nconsole.log(total, 10 % 4); // 22 2' },
+  'js-strings': { t: 'Strings', mdn: 'Web/JavaScript/Reference/Template_literals',
+    p: ['Template literals use backticks and drop values in with ${…}. Strings have methods such as toUpperCase(), includes(), slice(), split() and trim(), and a length.'],
+    code: 'const name = "Nova";\nconsole.log(`Hi ${name}, you have ${2 + 3} lives`);\nconsole.log(name.toUpperCase()); // NOVA' },
+  'js-if': { t: 'Conditionals', mdn: 'Learn/JavaScript/Building_blocks/conditionals',
+    p: ['if (…) { } else if (…) { } else { } runs the first branch whose condition is true. Compare with === and !==, >, >=, <, <=, and combine with && (and), || (or) and ! (not).', 'The conditional operator is a short if for values: const label = hp > 0 ? "alive" : "down";'],
+    code: 'if (hp <= 0) {\n  console.log("game over");\n} else if (hp < 20) {\n  console.log("low health");\n} else {\n  console.log("ok");\n}' },
+  'js-loops': { t: 'Loops', mdn: 'Learn/JavaScript/Building_blocks/Looping_code',
+    p: ['for (start; condition; step) repeats while the condition holds. for (const item of list) walks an array. while (condition) repeats until it is false; make sure something changes or it never stops.'],
+    code: 'for (let i = 10; i > 0; i -= 3) {\n  console.log(i); // 10 7 4 1\n}\nfor (const item of ["a", "b"]) console.log(item);' },
+  'js-functions': { t: 'Functions', mdn: 'Learn/JavaScript/Building_blocks/Functions',
+    p: ['function name(params) { return value; } defines a reusable function. return hands a value back and ends the function. Arrow functions are a short form: const double = n => n * 2;', 'Math.min, Math.max, Math.round, Math.floor and Math.random are handy built-ins.'],
+    code: 'function lerp(a, b, t) {\n  return a + (b - a) * t;\n}\nconsole.log(lerp(0, 10, 0.25)); // 2.5' },
+  'js-arrays': { t: 'Arrays', mdn: 'Web/JavaScript/Reference/Global_Objects/Array',
+    p: ['filter(fn) keeps the items where fn returns true; map(fn) makes a new array from fn’s results; reduce((acc, item) => …, start) folds an array into one value.', 'sort((a, b) => a - b) sorts numbers ascending (b - a for descending). It sorts in place, so copy first with [...list] if you need the original.'],
+    code: 'const nums = [5, 12, 8];\nnums.filter(n => n > 6);        // [12, 8]\nnums.map(n => n * 2);           // [10, 24, 16]\nnums.reduce((s, n) => s + n, 0); // 25' },
+  'js-objects': { t: 'Objects', mdn: 'Learn/JavaScript/Objects/Basics',
+    p: ['Objects group named values: { name: "Ada", hp: 10 }. Read and write with dot notation (hero.hp) or brackets (hero["hp"]). Object.keys(obj) lists the property names, and arrays inside can be changed with push.'],
+    code: 'const hero = { name: "Ada", hp: 10, items: [] };\nhero.hp -= 3;\nhero.items.push("map");\nconsole.log(Object.keys(hero)); // ["name","hp","items"]' },
+  'js-json': { t: 'JSON', mdn: 'Web/JavaScript/Reference/Global_Objects/JSON',
+    p: ['JSON is text that looks like JavaScript objects and arrays, with quoted keys. JSON.stringify(value) turns data into JSON text, for saving or sending. JSON.parse(text) turns it back into data.'],
+    code: 'const text = JSON.stringify({ level: 3 }); // \'{"level":3}\'\nconst data = JSON.parse(text);\nconsole.log(data.level); // 3' },
+  'js-classes': { t: 'Classes', mdn: 'Web/JavaScript/Reference/Classes',
+    p: ['A class is a template for objects. constructor runs on new and sets up this; other methods are shared by every instance. instanceof checks which class made an object.'],
+    code: 'class Enemy {\n  constructor(hp) {\n    this.hp = hp;\n  }\n  hit(damage) {\n    this.hp -= damage;\n    return this.hp <= 0;\n  }\n}\nconst e = new Enemy(5);' },
+  'dom-select': { t: 'Finding and changing elements', mdn: 'Web/API/Document/querySelector',
+    p: ['document.querySelector(css) returns the first element matching a CSS selector; querySelectorAll returns all of them. Change text with textContent (safe: it never runs HTML) and inline styles with element.style.propertyName, in camelCase.'],
+    code: 'const title = document.querySelector("#title");\ntitle.textContent = "Ready!";\ntitle.style.color = "tomato";\ntitle.style.fontSize = "32px";' },
+  'dom-create': { t: 'Creating elements', mdn: 'Web/API/Document/createElement',
+    p: ['document.createElement("li") makes a new element; set its textContent and classes, then add it to the page with parent.append(child).', 'A render function that rebuilds a list from data (clear it with innerHTML = "", then append) keeps the page in step with your state.'],
+    code: 'const list = document.querySelector("#list");\nfor (const name of ["a", "b"]) {\n  const li = document.createElement("li");\n  li.textContent = name;\n  list.append(li);\n}' },
+  'dom-classlist': { t: 'classList', mdn: 'Web/API/Element/classList',
+    p: ['element.classList.add("x"), remove("x"), toggle("x", force) and contains("x") manage classes. Styling through classes keeps the look in CSS and the logic in JavaScript.', 'querySelectorAll returns a NodeList, which you can index (cells[2]) or loop with for…of.'],
+    code: 'const cells = document.querySelectorAll(".cell");\ncells[0].classList.add("on");\ncells[1].classList.toggle("on", false);' },
+  'dom-events': { t: 'Events', mdn: 'Learn/JavaScript/Building_blocks/Events',
+    p: ['element.addEventListener("click", handler) runs handler on every click. Other common events: input (a field’s value changed), change, submit, keydown and pointerdown. The handler gets an event object; for inputs, read the field’s value.'],
+    code: 'const button = document.querySelector("#go");\nbutton.addEventListener("click", () => {\n  console.log("clicked");\n});\ninput.addEventListener("input", () => console.log(input.value));' },
+  'dom-keys': { t: 'Keyboard input', mdn: 'Web/API/KeyboardEvent/key',
+    p: ['Listen for keydown on document (or window). event.key names the key: "ArrowLeft", "a", " " (space), "Enter". event.code names the physical key ("KeyA"), which suits WASD controls on any layout. Call event.preventDefault() to stop arrows from scrolling the page.'],
+    code: 'document.addEventListener("keydown", event => {\n  if (event.key === "ArrowLeft") x -= 10;\n  if (event.key === "ArrowRight") x += 10;\n  draw();\n});' },
+  'dom-storage': { t: 'localStorage', mdn: 'Web/API/Window/localStorage',
+    p: ['localStorage keeps strings per site, even after the browser closes. setItem(key, value) saves, getItem(key) reads (null if missing), removeItem(key) deletes. Store numbers and objects as strings: Number(…) or JSON.parse(…) when reading them back.', 'Access can fail in private windows, so wrap it in try/catch in real apps.'],
+    code: 'localStorage.setItem("best", String(1200));\nconst best = Number(localStorage.getItem("best")) || 0;\nlocalStorage.setItem("save", JSON.stringify({ level: 3 }));' },
+  'js-promises': { t: 'Promises', mdn: 'Web/JavaScript/Guide/Using_promises',
+    p: ['A Promise is a value that arrives later. new Promise(resolve => …) makes one; call resolve(value) when the work is done. .then(fn) runs fn with the value. setTimeout(fn, ms) runs fn after a delay, so wrapping it in a Promise gives you an awaitable wait.'],
+    code: 'const wait = ms => new Promise(resolve => setTimeout(resolve, ms));\nwait(500).then(() => console.log("half a second later"));' },
+  'js-async': { t: 'async and await', mdn: 'Learn/JavaScript/Asynchronous/Promises',
+    p: ['An async function can await a promise: it pauses until the value arrives, then continues. It always returns a promise itself.', 'If an awaited promise rejects, await throws, so wrap it in try { … } catch (error) { … } to recover.'],
+    code: 'async function load() {\n  try {\n    const level = await loadLevel(1);\n    console.log(level.name);\n  } catch (error) {\n    console.log("could not load:", error.message);\n  }\n}' },
+  'canvas': { t: 'Drawing on a canvas', mdn: 'Web/API/Canvas_API/Tutorial',
+    p: ['canvas.getContext("2d") gives a drawing context. Set ctx.fillStyle, then ctx.fillRect(x, y, w, h). (0, 0) is the top-left; y grows downward.', 'For circles and other shapes, start a path with ctx.beginPath(), add ctx.arc(x, y, radius, 0, Math.PI * 2), and then ctx.fill() or ctx.stroke(). ctx.clearRect clears an area, which you do each frame in a game.'],
+    code: 'const ctx = canvas.getContext("2d");\nctx.fillStyle = "#29335c";\nctx.fillRect(0, 0, canvas.width, canvas.height);\nctx.beginPath();\nctx.arc(50, 50, 20, 0, Math.PI * 2);\nctx.fillStyle = "gold";\nctx.fill();' },
+  'game-loop': { t: 'The game loop', mdn: 'Games/Anatomy',
+    p: ['requestAnimationFrame(frame) calls frame once before the next repaint, about 60 times a second, passing a timestamp in milliseconds. Ask for the next frame from inside frame to keep the loop going.', 'Frames are not evenly spaced, so move things by speed × dt, where dt is the seconds since the last frame. Then the game runs at the same speed on every device.'],
+    code: 'let last = null;\nfunction frame(time) {\n  if (last !== null) update((time - last) / 1000);\n  last = time;\n  draw();\n  requestAnimationFrame(frame);\n}\nrequestAnimationFrame(frame);' },
+  'collision': { t: 'Collision boxes', mdn: 'Games/Techniques/2D_collision_detection',
+    p: ['Two axis-aligned rectangles overlap when each one starts before the other ends, on both axes. Strict < means edges that only touch do not count.', 'For circles, compare the distance between centers (Math.hypot) with the sum of the radii.'],
+    code: 'const hit = a.x < b.x + b.w && b.x < a.x + a.w &&\n            a.y < b.y + b.h && b.y < a.y + a.h;' },
+  'state-machine': { t: 'Game states', mdn: 'Web/JavaScript/Reference/Statements/switch',
+    p: ['A state machine keeps the game in one named state at a time ("menu", "playing", "paused") and moves between them only on given events. A pure function nextState(state, event) is easy to test, and the loop can draw a different screen per state.', 'switch or a lookup object both work; return the old state for events that do not apply.'],
+    code: 'const transitions = {\n  menu: { start: "playing" },\n  playing: { pause: "paused", die: "gameover" },\n};\nconst next = transitions[state]?.[event] ?? state;' },
+  'pwa-manifest': { t: 'The web app manifest', mdn: 'Web/Progressive_web_apps/Manifest',
+    p: ['A manifest is a JSON file, linked with <link rel="manifest" href="manifest.webmanifest">, that tells the browser how to install your app: name, short_name, start_url, display ("standalone" hides the browser UI), theme_color, background_color and icons (at least 192×192 and 512×512).', 'With a manifest, HTTPS and a service worker, browsers offer to install the site like an app.'],
+    code: '{\n  "name": "Star Forge",\n  "short_name": "Star",\n  "start_url": "./",\n  "display": "standalone",\n  "theme_color": "#29335c",\n  "background_color": "#29335c",\n  "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }]\n}' },
+  'pwa-register': { t: 'Registering a service worker', mdn: 'Web/API/ServiceWorkerContainer/register',
+    p: ['A service worker is a script that sits between your page and the network; it is what makes an app work offline. Register it from the page with navigator.serviceWorker.register("sw.js"), which returns a promise of the registration.', 'Check "serviceWorker" in navigator first, and register after the load event so it does not compete with the first page load. Service workers need HTTPS (or localhost).'],
+    code: 'if ("serviceWorker" in navigator) {\n  window.addEventListener("load", () => {\n    navigator.serviceWorker.register("sw.js")\n      .then(reg => console.log("scope", reg.scope));\n  });\n}' },
+  'pwa-cache': { t: 'Caching in a service worker', mdn: 'Web/Progressive_web_apps/Tutorials/js13kGames/Offline_Service_workers',
+    p: ['install: fill a named cache with your files. event.waitUntil(promise) keeps the worker alive until the promise settles. activate: delete caches from older versions. fetch: answer requests with event.respondWith(promise), here from the cache first and the network second.', 'Change the cache name (app-v2) when your files change, so the new worker installs fresh copies and activate removes the old ones.'],
+    code: 'const CACHE = "app-v2";\nself.addEventListener("install", event => {\n  event.waitUntil(caches.open(CACHE).then(c => c.addAll(["./", "./index.html"])));\n});\nself.addEventListener("activate", event => {\n  event.waitUntil(caches.keys().then(keys =>\n    Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))));\n});\nself.addEventListener("fetch", event => {\n  event.respondWith(caches.match(event.request).then(hit => hit || fetch(event.request)));\n});' },
+  'pwa-online': { t: 'Online and offline', mdn: 'Web/API/Navigator/onLine',
+    p: ['navigator.onLine is false when the browser knows it has no network. The window fires "online" and "offline" events when that changes. Use them to show a status and to queue work until the connection returns; true does not promise the internet is reachable, only that a network is.'],
+    code: 'function show() {\n  status.textContent = navigator.onLine ? "Online" : "Offline";\n}\nshow();\nwindow.addEventListener("online", show);\nwindow.addEventListener("offline", show);' },
+};
+
+// =============================================================================
+// Running code. Every preview is a sandboxed iframe (scripts only, no access
+// to this page). A small harness inside it captures the console, stands in for
+// localStorage, and on request plays test actions and measures the page.
+// =============================================================================
+
+const VIEWPORTS = { land: { w: 640, h: 360, label: '16:9' }, port: { w: 360, h: 640, label: '9:16' } };
+
+function harness(userStart, userLines) {
+  var send = function (type, data) { try { parent.postMessage({ ff: true, type: type, data: data }, '*'); } catch (e) { /* closed */ } };
+  var lines = [];
+  function fmt(v) {
+    if (typeof v === 'string') return v;
+    if (v instanceof Error) return String(v);
+    if (typeof v === 'function') return 'function ' + (v.name || '(anonymous)');
+    if (v === undefined) return 'undefined';
+    if (typeof v === 'number' || typeof v === 'boolean' || v === null) return String(v);
+    if (typeof Node !== 'undefined' && v instanceof Node) return '<' + (v.nodeName || 'node').toLowerCase() + '>';
+    try { var s = JSON.stringify(v); return s === undefined ? String(v) : s; } catch (e) { return String(v); }
+  }
+  function record(level, text) { lines.push({ level: level, text: text }); send('console', { level: level, text: text }); }
+  ['log', 'info', 'warn', 'error'].forEach(function (level) {
+    var orig = console[level];
+    console[level] = function () {
+      record(level, Array.prototype.map.call(arguments, fmt).join(' '));
+      try { orig.apply(console, arguments); } catch (e) { /* ignore */ }
+    };
+  });
+  function where(line) {
+    if (!line) return '';
+    if (line >= userStart && line <= userStart + userLines) return ' (line ' + Math.min(line - userStart + 1, userLines) + ')';
+    return ' (in the given code)';
+  }
+  addEventListener('error', function (e) { record('error', (e.message || 'Error') + where(e.lineno)); });
+  addEventListener('unhandledrejection', function (e) { record('error', 'Uncaught (in promise) ' + fmt(e.reason)); });
+
+  // The sandbox has no storage of its own, so give each page a fresh one.
+  var mem = {};
+  var store = {
+    getItem: function (k) { k = String(k); return Object.prototype.hasOwnProperty.call(mem, k) ? mem[k] : null; },
+    setItem: function (k, v) { mem[String(k)] = String(v); },
+    removeItem: function (k) { delete mem[String(k)]; },
+    clear: function () { mem = {}; },
+    key: function (i) { var keys = Object.keys(mem); return i < keys.length ? keys[i] : null; },
+    get length() { return Object.keys(mem).length; },
+  };
+  try { Object.defineProperty(window, 'localStorage', { configurable: true, value: store }); } catch (e) { /* keep the real one */ }
+  try { Object.defineProperty(window, 'sessionStorage', { configurable: true, value: store }); } catch (e) { /* keep the real one */ }
+
+  function sleep(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
+  function act(a) {
+    if (a.click) { var c = document.querySelector(a.click); if (c) c.click(); }
+    if (a.input) {
+      var field = document.querySelector(a.input[0]);
+      if (field) { field.focus(); field.value = a.input[1]; field.dispatchEvent(new Event('input', { bubbles: true })); field.dispatchEvent(new Event('change', { bubbles: true })); }
+    }
+    if (a.key) {
+      var target = document.activeElement || document.body;
+      ['keydown', 'keyup'].forEach(function (type) { target.dispatchEvent(new KeyboardEvent(type, { key: a.key, bubbles: true, cancelable: true })); });
+    }
+    if (a.call && typeof window[a.call[0]] === 'function') window[a.call[0]].apply(window, a.call.slice(1));
+  }
+  function snapshot(req) {
+    var out = [];
+    function add(node, depth) {
+      var cs = getComputedStyle(node), r = node.getBoundingClientRect(), props = {}, attrs = {}, text = '';
+      req.props.forEach(function (p) { props[p] = cs.getPropertyValue(p); });
+      (req.attrs || []).forEach(function (a) { if (node.hasAttribute(a)) attrs[a] = node.getAttribute(a); });
+      node.childNodes.forEach(function (c) { if (c.nodeType === 3) text += c.textContent; });
+      var item = {
+        tag: node.tagName.toLowerCase(), id: node.id || '',
+        cls: typeof node.className === 'string' ? node.className.trim() : '',
+        depth: depth, text: text.replace(/\s+/g, ' ').trim(), props: props, attrs: attrs,
+        rect: [r.left, r.top, r.width, r.height].map(function (v) { return Math.round(v * 10) / 10; }),
+      };
+      if ('value' in node && /^(INPUT|TEXTAREA|SELECT)$/.test(node.tagName)) item.value = node.value;
+      if (node.tagName === 'CANVAS') {
+        try {
+          var ctx = node.getContext('2d');
+          if (ctx && node.width && node.height) item.canvas = { w: node.width, h: node.height, data: ctx.getImageData(0, 0, node.width, node.height).data };
+        } catch (e) { /* not a 2d canvas */ }
+      }
+      out.push(item);
+      for (var i = 0; i < node.children.length; i++) {
+        var child = node.children[i];
+        if (!/^(SCRIPT|STYLE|LINK|META|TEMPLATE)$/.test(child.tagName)) add(child, depth + 1);
+      }
+    }
+    add(document.body, 0);
+    return out;
+  }
+  addEventListener('message', function (e) {
+    var req = e.data && e.data.ffMeasure;
+    if (!req) return;
+    (async function () {
+      await sleep(req.settle || 30);
+      for (var i = 0; i < (req.actions || []).length; i++) { try { act(req.actions[i]); } catch (err) { record('error', String(err)); } await sleep(15); }
+      await sleep(30);
+      return { lines: lines.slice(), els: snapshot(req) };
+    })().then(function (res) { send('measure', res); }, function (err) { send('measure', { lines: lines.slice(), els: [], error: String(err) }); });
+  });
+}
+
+const HARNESS_SRC = '(' + harness.toString() + ')';
+const noClose = (s, tag) => String(s || '').replace(new RegExp('</(' + tag + ')', 'gi'), '<\\/$1');
+
+function buildDoc(code, given) {
+  const pre = given && given.pre ? `<script>\n${noClose(given.pre, 'script')}\n<\/script>\n` : '';
+  const post = given && given.post ? `<script>\n{\n${noClose(given.post, 'script')}\n}\n<\/script>\n` : '';
+  const js = noClose(code.js, 'script');
+  const head = `<!doctype html>\n<html><head><meta charset="utf-8">\n<script>@@HARNESS@@<\/script>\n<style>\n${noClose(code.css, 'style')}\n</style>\n</head><body>\n${code.html || ''}\n${pre}<script>\n`;
+  const userStart = head.split('\n').length;
+  const userLines = js.split('\n').length;
+  return head.replace('@@HARNESS@@', () => `${HARNESS_SRC}(${userStart}, ${userLines});`) + js + `\n<\/script>\n${post}</body></html>`;
+}
+
+// Messages from frames are routed by the frame's window.
+const frameHandlers = new Map();
+window.addEventListener('message', e => {
+  const d = e.data;
+  if (!d || d.ff !== true) return;
+  const handler = frameHandlers.get(e.source);
+  if (handler) handler(d);
+});
+
+function newFrame(vp) {
+  const f = document.createElement('iframe');
+  f.setAttribute('sandbox', 'allow-scripts');
+  f.width = vp.w; f.height = vp.h;
+  f.style.width = vp.w + 'px'; f.style.height = vp.h + 'px';
+  return f;
+}
+
+// Loads a page in a hidden frame, plays the test, and returns its measurements.
+function measure(vpKey, doc, req) {
+  return new Promise(resolve => {
+    const f = newFrame(VIEWPORTS[vpKey]);
+    let win = null, done = false;
+    const finish = res => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      if (win) frameHandlers.delete(win);
+      f.remove();
+      resolve(res);
+    };
+    const timer = setTimeout(() => finish({ timeout: true, lines: [], els: [] }), 6000 + (req.settle || 0));
+    f.srcdoc = doc;
+    $('gradeHost').append(f);
+    win = f.contentWindow;
+    frameHandlers.set(win, d => { if (d.type === 'measure') finish(d.data); });
+    f.addEventListener('load', () => win.postMessage({ ffMeasure: req }, '*'), { once: true });
+  });
+}
+
+// =============================================================================
+// Comparing a result with the target
+// =============================================================================
+
+const SIDES = ['top', 'right', 'bottom', 'left'];
+const VISUAL = [
+  'color', 'background-color', 'background-image', 'font-family', 'font-size', 'font-weight', 'font-style',
+  'text-align', 'text-transform', 'text-decoration-line', 'letter-spacing', 'opacity', 'transform', 'visibility', 'box-shadow', 'list-style-type',
+  ...SIDES.flatMap(s => [`border-${s}-width`, `border-${s}-style`, `border-${s}-color`]),
+  'border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius',
+];
+const NUM = /-?\d*\.?\d+(?:e[-+]?\d+)?/gi;
+const firstFont = v => v.split(',')[0].replace(/["']/g, '').trim().toLowerCase();
+
+function sameValue(prop, a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (prop === 'font-family') return firstFont(a) === firstFont(b);
+  const na = a.match(NUM) || [], nb = b.match(NUM) || [];
+  if (a.replace(NUM, '#') !== b.replace(NUM, '#') || na.length !== nb.length) return false;
+  return na.every((x, i) => Math.abs(x - nb[i]) <= Math.max(0.02, Math.abs(x) * 0.005));
+}
+
+function labelElements(els) {
+  const seen = new Map();
+  return els.map(e => {
+    let base = e.tag === 'body' ? 'body' : e.tag + (e.id ? '#' + e.id : '') + (e.cls ? '.' + e.cls.split(/\s+/).join('.') : '');
+    const n = (seen.get(base) || 0) + 1;
+    seen.set(base, n);
+    return n > 1 ? `${base} (${n})` : base;
+  });
+}
+
+function canvasMismatch(a, b) {
+  if (!a || !b || a.w !== b.w || a.h !== b.h) return 1;
+  let bad = 0;
+  for (let i = 0; i < a.data.length; i += 4) {
+    if (Math.abs(a.data[i] - b.data[i]) > 24 || Math.abs(a.data[i + 1] - b.data[i + 1]) > 24 ||
+        Math.abs(a.data[i + 2] - b.data[i + 2]) > 24 || Math.abs(a.data[i + 3] - b.data[i + 3]) > 24) bad++;
+  }
+  return bad / (a.w * a.h);
+}
+
+// Returns { checks, passed, diffs } for one page against its target.
+function compare(t, m, inst) {
+  const diffs = [];
+  let checks = 0, passed = 0;
+  const check = (ok, diff, weight = 1) => { checks += weight; if (ok) passed += weight; else diffs.push(diff); };
+  if (m.timeout) {
+    check(false, { kind: 'timeout' });
+    return { checks, passed, diffs };
+  }
+  for (const line of m.lines) if (line.level === 'error') diffs.push({ kind: 'error', text: line.text });
+
+  const props = [...new Set([...VISUAL, ...inst.focus])];
+  const whole = props.length + 3; // a missing or extra element fails all of its checks
+  const labels = labelElements(t.els);
+  const n = Math.max(t.els.length, m.els.length);
+  for (let i = 0; i < n; i++) {
+    const te = t.els[i], me = m.els[i];
+    if (!te) { check(false, { kind: 'extra', el: labelElements(m.els)[i] }, whole); continue; }
+    const label = labels[i];
+    if (!me) { check(false, { kind: 'missing', el: label }, whole); continue; }
+    if (te.tag !== me.tag) { check(false, { kind: 'tag', el: label, target: te.tag, yours: me.tag }, whole); continue; }
+    check(te.text === me.text, { kind: 'text', el: label, target: te.text, yours: me.text });
+    if (te.value !== undefined) check(te.value === me.value, { kind: 'value', el: label, target: te.value, yours: me.value });
+    for (const [k, v] of Object.entries(te.attrs)) check(me.attrs[k] === v, { kind: 'attr', el: label, prop: k, target: v, yours: me.attrs[k] });
+    const rectOk = te.rect.every((v, j) => Math.abs(v - me.rect[j]) <= 1);
+    check(rectOk, { kind: 'rect', el: label, target: te.rect, yours: me.rect });
+    for (const p of props) {
+      const side = /^border-(top|right|bottom|left)-(style|color)$/.exec(p);
+      if (side && te.props[`border-${side[1]}-width`] === '0px' && me.props[`border-${side[1]}-width`] === '0px') continue;
+      check(sameValue(p, te.props[p], me.props[p]), { kind: 'prop', el: label, prop: p, target: te.props[p], yours: me.props[p] });
+    }
+    if (te.canvas) {
+      const off = canvasMismatch(te.canvas, me.canvas);
+      check(off <= 0.005, { kind: 'canvas', el: label, off });
+    }
+  }
+  if (inst.console) {
+    const tl = t.lines.map(l => l.text), ml = m.lines.filter(l => l.level !== 'error').map(l => l.text);
+    const len = Math.max(tl.length, ml.length);
+    let first = -1;
+    for (let i = 0; i < len; i++) { checks++; if (tl[i] === ml[i]) passed++; else if (first < 0) first = i; }
+    if (first >= 0) diffs.push({ kind: 'console', line: first + 1, target: tl[first], yours: ml[first], tn: tl.length, mn: ml.length });
+  }
+  return { checks, passed, diffs };
+}
+
+// Runs the learner's code and the answer side by side, in both views and with
+// extra test values, and compares every pair.
+async function evaluate(inst, code) {
+  const runs = [{ given: inst.given, vps: ['land', 'port'], alt: false }, ...inst.alts.map(g => ({ given: g, vps: ['land'], alt: true }))];
+  const base = { props: [...new Set([...VISUAL, ...inst.focus])], attrs: inst.attrs, settle: inst.settle };
+  const jobs = [];
+  for (const run of runs) {
+    for (const vp of run.vps) {
+      const req = { ...base, actions: (run.given && run.given.actions) || [] };
+      jobs.push(Promise.all([measure(vp, buildDoc(inst.target, run.given), req), measure(vp, buildDoc(code, run.given), req)])
+        .then(([t, m]) => ({ run, vp, t, m })));
+    }
+  }
+  const results = await Promise.all(jobs);
+  let checks = 0, passed = 0;
+  const diffs = new Map();
+  for (const res of results) {
+    const c = compare(res.t, res.m, inst);
+    checks += c.checks; passed += c.passed;
+    const where = res.run.alt ? 'with other test values' : VIEWPORTS[res.vp].label;
+    for (const d of c.diffs) {
+      const key = JSON.stringify(d);
+      if (!diffs.has(key)) diffs.set(key, { ...d, where: [] });
+      if (!diffs.get(key).where.includes(where)) diffs.get(key).where.push(where);
+    }
+  }
+  const list = [...diffs.values()];
+  const errors = list.some(d => d.kind === 'error' || d.kind === 'timeout');
+  const score = checks ? passed / checks : 1;
+  return { pass: !errors && passed === checks, score: errors ? Math.min(score, 0.99) : score, diffs: list, results };
+}
+
+// --- Describing differences
+
+function hex(v) {
+  const m = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/.exec(v || '');
+  if (!m) return null;
+  if (m[4] !== undefined && Number(m[4]) === 0) return 'transparent';
+  const h = '#' + [m[1], m[2], m[3]].map(n => Number(n).toString(16).padStart(2, '0')).join('');
+  return m[4] !== undefined ? `${h} at ${Math.round(m[4] * 100)}%` : h;
+}
+
+function showValue(v) {
+  if (v == null || v === '') return el('em', { class: 'muted' }, 'none');
+  const h = hex(v);
+  if (h) return el('span', {}, h !== 'transparent' ? el('span', { class: 'swatch', style: `background:${v}` }) : null, el('code', {}, h));
+  return el('code', {}, v.length > 80 ? v.slice(0, 77) + '…' : v);
+}
+
+function colorDelta(a, b) {
+  const pa = (a || '').match(NUM), pb = (b || '').match(NUM);
+  if (!pa || !pb || !/^rgb/.test(a) || !/^rgb/.test(b)) return null;
+  const d = [0, 1, 2].map(i => Math.round(pb[i] - pa[i]));
+  return `change: red ${d[0] >= 0 ? '+' : ''}${d[0]}, green ${d[1] >= 0 ? '+' : ''}${d[1]}, blue ${d[2] >= 0 ? '+' : ''}${d[2]}`;
+}
+
+const rectText = r => `${Math.round(r[2])}×${Math.round(r[3])} at (${Math.round(r[0])}, ${Math.round(r[1])})`;
+
+function describeDiff(d) {
+  const where = d.where && d.where.length && !(d.where.length === 2 && d.where.every(w => w === '16:9' || w === '9:16'))
+    ? el('span', { class: 'diff-where' }, ' · ', d.where.join(', ')) : null;
+  const b = s => el('b', {}, s);
+  switch (d.kind) {
+    case 'timeout': return el('li', {}, el('span', { class: 'bad' }, 'Your code did not finish in time. Is there a loop that never ends?'), where);
+    case 'error': return el('li', {}, el('span', { class: 'bad' }, 'Error: ', d.text), where);
+    case 'missing': return el('li', {}, b(d.el), ' is missing from your page.', where);
+    case 'extra': return el('li', {}, 'Your page has an extra ', b(d.el), '.', where);
+    case 'tag': return el('li', {}, 'Expected ', el('code', {}, '<' + d.target + '>'), ' where yours has ', el('code', {}, '<' + d.yours + '>'), '.', where);
+    case 'text': return el('li', {}, b(d.el), ' text: yours ', showValue(d.yours), ' → target ', showValue(d.target), where);
+    case 'value': return el('li', {}, b(d.el), ' value: yours ', showValue(d.yours), ' → target ', showValue(d.target), where);
+    case 'attr': return el('li', {}, b(d.el), ' ', el('code', {}, d.prop), ': yours ', showValue(d.yours), ' → target ', showValue(d.target), where);
+    case 'rect': {
+      const dx = Math.round(d.target[0] - d.yours[0]), dy = Math.round(d.target[1] - d.yours[1]), dw = Math.round(d.target[2] - d.yours[2]), dh = Math.round(d.target[3] - d.yours[3]);
+      const parts = [dx && `${dx > 0 ? 'right' : 'left'} ${Math.abs(dx)}px`, dy && `${dy > 0 ? 'down' : 'up'} ${Math.abs(dy)}px`, dw && `${dw > 0 ? 'wider' : 'narrower'} by ${Math.abs(dw)}px`, dh && `${dh > 0 ? 'taller' : 'shorter'} by ${Math.abs(dh)}px`].filter(Boolean);
+      return el('li', {}, b(d.el), ' box: yours ', rectText(d.yours), ', target ', rectText(d.target), parts.length ? el('span', { class: 'muted' }, ` (target is ${parts.join(', ')})`) : null, where);
+    }
+    case 'prop': {
+      const delta = colorDelta(d.yours, d.target);
+      return el('li', {}, b(d.el), ' ', el('code', {}, d.prop), ': yours ', showValue(d.yours), ' → target ', showValue(d.target), delta ? el('span', { class: 'muted' }, ` (${delta})`) : null, where);
+    }
+    case 'canvas': return el('li', {}, b(d.el), ` drawing: ${Math.max(1, Math.round(d.off * 100))}% of pixels differ from the target.`, where);
+    case 'console': return el('li', {}, `Console line ${d.line}: yours `, showValue(d.yours), ' → target ', showValue(d.target),
+      d.tn !== d.mn ? el('span', { class: 'muted' }, ` (target logs ${d.tn} line${d.tn === 1 ? '' : 's'}, yours ${d.mn})`) : null, where);
+    default: return el('li', {}, JSON.stringify(d));
+  }
+}
+
+// =============================================================================
+// Spaced repetition: Leitner levels on golden-ratio intervals (1, 2, 3, 4, 7,
+// 11, 18… days), buckets of 7 shuffled cards, as in the Flashcards app. The
+// difference is the path order: due cards are bucketed earliest-first, and new
+// cards are introduced strictly in path order.
+//  1. Due cards above level 0 come first, from the highest level down.
+//  2. Then level 0: cards missed in the last bucket lead, then other level 0
+//     cards in path order, then new cards in path order.
+//  3. A match moves a card up a level; a miss sends it back to level 0.
+// =============================================================================
+
+const PHI = 1.618033988749895;
+const BUCKET_SIZE = 7;
+const intervalDays = level => level <= 0 ? 0 : Math.max(1, Math.round(PHI ** (level - 1)));
+function today() {
+  const now = new Date();
+  return Math.floor((now.getTime() - now.getTimezoneOffset() * 60000) / 86400000);
+}
+const ORDER = TEMPLATES.map(t => t.id);
+
+const STORE_KEY = 'frontend-flashing.v1';
+let store = loadStore();
+function loadStore() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORE_KEY));
+    if (s && typeof s === 'object' && s.cards) return { cards: s.cards, bucket: s.bucket || [], carry: s.carry || [], current: s.current || null };
+  } catch (e) { /* storage unavailable or corrupt */ }
+  return { cards: {}, bucket: [], carry: [], current: null };
+}
+function saveStore() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) { /* storage unavailable */ }
+}
+
+const isDue = (rec, day) => rec.level === 0 || rec.due <= day;
+const shuffle = list => rng(randomSeed()).shuffle(list);
+
+function fillBucket() {
+  const day = today();
+  const seen = ORDER.filter(id => store.cards[id]);
+  const high = seen.filter(id => store.cards[id].level > 0 && store.cards[id].due <= day);
+  let pick;
+  if (high.length) {
+    const top = Math.max(...high.map(id => store.cards[id].level));
+    pick = high.filter(id => store.cards[id].level === top).slice(0, BUCKET_SIZE);
+  } else {
+    const carry = shuffle(store.carry.filter(id => store.cards[id] && store.cards[id].level === 0));
+    const zero = seen.filter(id => store.cards[id].level === 0 && !carry.includes(id));
+    const fresh = ORDER.filter(id => !store.cards[id]);
+    pick = [...carry, ...zero, ...fresh].slice(0, BUCKET_SIZE);
+  }
+  store.carry = [];
+  store.bucket = shuffle(pick);
+}
+
+function counts() {
+  const day = today();
+  const seen = ORDER.filter(id => store.cards[id]);
+  return { seen: seen.length, total: ORDER.length, due: seen.filter(id => isDue(store.cards[id], day)).length };
+}
+
+function nextDueDays() {
+  const day = today();
+  const dues = ORDER.filter(id => store.cards[id]).map(id => store.cards[id].due - day);
+  return dues.length ? Math.max(0, Math.min(...dues)) : 0;
+}
+
+// =============================================================================
+// The card on screen
+// =============================================================================
+
+function makeInstance(tpl, seed) {
+  const c = tpl.gen(rng(seed));
+  const base = { html: c.html || '', css: c.css != null ? c.css : BASE_CSS, js: c.js || '' };
+  const given = c.given ? c.given(rng(seed ^ 0x5bd1e995), 0) : null;
+  const altCount = c.alts != null ? c.alts : (c.given ? 1 : 0);
+  const alts = [];
+  for (let i = 1; i <= altCount; i++) alts.push(c.given(rng(seed + i * 7919), i));
+  return {
+    tpl, seed, lang: tpl.lang, prompt: c.prompt, starter: base, target: { ...base, [tpl.lang]: c.sol },
+    given, alts, focus: c.focus || [], attrs: c.attrs || [], settle: c.settle || 30, console: tpl.lang === 'js' && c.console !== false,
+  };
+}
+
+let inst = null;          // the card being worked on
+let code = null;          // the learner's html/css/js
+let viewLang = 'html';    // the tab being shown
+let lastResult = null;    // { inst, code, result, rec } from the last Submit
+const ui = { target: false, context: false, port: false };
+
+const frames = {};
+function setupPreviews() {
+  for (const [key, screenId] of [['land', 'screenLand'], ['port', 'screenPort']]) {
+    const screen = $(screenId);
+    for (const kind of ['cur', 'tgt']) {
+      const f = newFrame(VIEWPORTS[key]);
+      f.className = kind;
+      f.title = `${kind === 'cur' ? 'Your result' : 'Target'} (${VIEWPORTS[key].label})`;
+      screen.append(f);
+      frames[kind + key] = f;
+    }
+    new ResizeObserver(() => screen.style.setProperty('--s', screen.clientWidth / VIEWPORTS[key].w)).observe(screen);
+  }
+  frames.consoleCur = [];
+  frames.consoleTgt = [];
+  // The 16:9 frames feed the console.
+  frameHandlers.set(frames.curland.contentWindow, d => { if (d.type === 'console') { frames.consoleCur.push(d.data); if (!ui.target) renderConsole(); } });
+  frameHandlers.set(frames.tgtland.contentWindow, d => { if (d.type === 'console') { frames.consoleTgt.push(d.data); if (ui.target) renderConsole(); } });
+}
+
+function renderConsole() {
+  const lines = ui.target ? frames.consoleTgt : frames.consoleCur;
+  $('consoleTitle').textContent = ui.target ? 'Console · target' : 'Console';
+  const list = $('consoleList');
+  list.replaceChildren(...(lines.length ? lines.map(l => el('li', { class: l.level }, l.text)) : [el('li', { class: 'empty' }, inst && inst.lang === 'js' ? 'Nothing logged yet.' : 'Nothing logged.')]));
+  list.scrollTop = list.scrollHeight;
+}
+
+function refreshCurrent() {
+  frames.consoleCur = [];
+  renderConsole();
+  const doc = buildDoc(code, inst.given);
+  frames.curland.srcdoc = doc;
+  frames.curport.srcdoc = doc;
+}
+function refreshTarget() {
+  frames.consoleTgt = [];
+  const doc = buildDoc(inst.target, inst.given);
+  frames.tgtland.srcdoc = doc;
+  frames.tgtport.srcdoc = doc;
+}
+
+function showEditor() {
+  const ta = $('code');
+  const editable = viewLang === inst.lang;
+  ta.value = code[viewLang];
+  ta.readOnly = !editable;
+  ta.placeholder = editable ? '' : `No ${viewLang.toUpperCase()} for this card.`;
+  for (const b of $('tabs').children) {
+    b.classList.toggle('active', b.dataset.lang === viewLang);
+    b.classList.toggle('locked', b.dataset.lang !== inst.lang);
+  }
+  const showGiven = viewLang === 'js' && inst.given;
+  $('givenPre').hidden = !(showGiven && inst.given.pre);
+  $('givenPre').textContent = showGiven && inst.given.pre ? inst.given.pre.trimEnd() : '';
+  $('givenPost').hidden = !(showGiven && inst.given.post);
+  $('givenPost').textContent = showGiven && inst.given.post ? inst.given.post.trimEnd() : '';
+}
+
+function levelText(rec) {
+  if (!rec) return 'New card';
+  if (rec.level === 0) return 'Level 0';
+  const days = rec.due - today();
+  return days <= 0 ? `Level ${rec.level} · due` : `Level ${rec.level} · due in ${days} day${days === 1 ? '' : 's'}`;
+}
+
+function renderStats() {
+  const c = counts();
+  $('stats').textContent = `${c.seen} of ${c.total} cards started · ${c.due} due`;
+}
+
+function loadCard(id, seed, savedCode, practice) {
+  const tpl = TEMPLATE_BY_ID.get(id);
+  inst = makeInstance(tpl, seed);
+  inst.practice = !!practice;
+  code = savedCode && typeof savedCode[inst.lang] === 'string' ? { ...inst.starter, [inst.lang]: savedCode[inst.lang] } : { ...inst.starter };
+  viewLang = inst.lang;
+  store.current = { id, seed, code: { [inst.lang]: code[inst.lang] }, practice: !!practice };
+  saveStore();
+
+  $('doneCard').hidden = true;
+  $('work').hidden = false;
+  $('actions').hidden = false;
+  closeHint();
+  $('cardUnit').textContent = tpl.unit + (inst.practice ? ' · practice' : '');
+  $('cardTitle').textContent = tpl.title;
+  $('cardLevel').textContent = levelText(store.cards[id]);
+  $('prompt').innerHTML = rich(inst.prompt);
+  setTarget(false);
+  showEditor();
+  refreshTarget();
+  refreshCurrent();
+  renderStats();
+  if (ui.context) updateContext();
+}
+
+function nextCard() {
+  if (!store.bucket.length) fillBucket();
+  const id = store.bucket.shift();
+  if (!id) return showCaughtUp();
+  loadCard(id, randomSeed(), null, false);
+}
+
+function showCaughtUp() {
+  inst = null;
+  store.current = null;
+  saveStore();
+  renderStats();
+  closeHint();
+  $('work').hidden = true;
+  $('actions').hidden = true;
+  $('cardUnit').textContent = 'Path';
+  $('cardTitle').textContent = 'All caught up';
+  const days = nextDueDays();
+  $('cardLevel').textContent = '';
+  $('prompt').textContent = `Nothing is due right now. The next review is ${days <= 1 ? 'tomorrow' : `in ${days} days`}. You can practise ahead; it will not change the schedule.`;
+  $('doneCard').hidden = false;
+  $('doneCard').replaceChildren(el('button', { class: 'primary', onclick: () => {
+    const seen = ORDER.filter(id => store.cards[id]);
+    loadCard(rng(randomSeed()).pick(seen), randomSeed(), null, true);
+  } }, 'Practise a card'));
+}
+
+function setTarget(on) {
+  ui.target = on;
+  $('targetBtn').setAttribute('aria-pressed', String(on));
+  $('views').classList.toggle('target', on);
+  renderConsole();
+}
+
+// --- Context
+
+let contextTimer = 0, contextRun = 0;
+function scheduleContext() {
+  clearTimeout(contextTimer);
+  if (ui.context) contextTimer = setTimeout(updateContext, 700);
+}
+
+const TRIVIAL = new Set(['', 'none', 'normal', 'auto', 'static', '0px', '0', 'rgba(0, 0, 0, 0)', 'visible', 'start', 'content-box']);
+// Values that are just the default for that property, so not worth listing.
+const DEFAULTS = { 'flex-direction': 'row', display: 'block' };
+async function updateContext() {
+  if (!inst) return;
+  const run = ++contextRun;
+  $('contextState').textContent = 'Checking…';
+  const res = await evaluate(inst, code);
+  if (run !== contextRun || !ui.context) return;
+  $('contextState').textContent = `${Math.floor(res.score * 100)}% match`;
+  const body = [];
+
+  if (inst.focus.length) {
+    const t = res.results.filter(r => !r.run.alt);
+    const byVp = Object.fromEntries(t.map(r => [r.vp, r.t]));
+    const labels = labelElements(byVp.land.els);
+    const items = [];
+    byVp.land.els.forEach((e, i) => {
+      const parts = [];
+      for (const p of inst.focus) {
+        const a = e.props[p], b = byVp.port.els[i] ? byVp.port.els[i].props[p] : a;
+        if ((TRIVIAL.has(a) || DEFAULTS[p] === a) && (TRIVIAL.has(b) || DEFAULTS[p] === b)) continue;
+        if (e.tag === 'body' && !['color', 'background-color'].includes(p)) continue;
+        parts.push(el('span', {}, el('code', {}, p), ' ', showValue(a), a !== b ? el('span', { class: 'muted' }, ' (9:16: ', showValue(b), ')') : null));
+      }
+      if (parts.length) items.push(el('li', {}, el('b', {}, labels[i]), ': ', parts.flatMap((x, j) => j ? ['; ', x] : [x])));
+    });
+    if (items.length) body.push(el('h3', {}, 'Target values'), el('ul', {}, items));
+  }
+  if (inst.given && inst.given.pre && inst.lang !== 'js') body.push(el('h3', {}, 'Given'), el('pre', {}, inst.given.pre));
+  body.push(el('h3', {}, 'Differences'));
+  if (!res.diffs.length) body.push(el('p', { class: 'ok' }, 'None. Your result matches the target.'));
+  else body.push(el('ul', {}, res.diffs.slice(0, 40).map(describeDiff)), res.diffs.length > 40 ? el('p', { class: 'muted' }, `…and ${res.diffs.length - 40} more.`) : null);
+  if (inst.alts.length) body.push(el('p', { class: 'muted' }, 'Submitting also runs your code with other test values, so it has to work in general.'));
+  $('contextBody').replaceChildren(...body.filter(Boolean));
+}
+
+function setContext(on) {
+  ui.context = on;
+  $('contextBtn').setAttribute('aria-pressed', String(on));
+  $('context').hidden = !on;
+  if (on) { $('contextBody').replaceChildren(el('p', { class: 'muted' }, 'Measuring…')); updateContext(); }
+}
+
+// --- Hint
+
+function openHint() {
+  if (!inst) return;
+  const doc = DOCS[inst.tpl.doc];
+  $('hint').replaceChildren(el('div', { class: 'doc' },
+    el('button', { onclick: closeHint }, '← Back to the card'),
+    el('h2', {}, doc.t),
+    doc.p.map(p => el('p', {}, p)),
+    el('pre', {}, doc.code),
+    el('div', { class: 'doc-links' },
+      el('a', { href: MDN + doc.mdn, target: '_blank', rel: 'noopener' }, 'Read more on MDN ↗'),
+      el('button', { onclick: closeHint }, 'Back to the card'))));
+  $('hint').hidden = false;
+  $('main').style.minHeight = $('hint').firstChild.offsetHeight + 'px';
+  $('hint').scrollTop = 0;
+  $('hint').querySelector('button').focus();
+}
+function closeHint() {
+  $('hint').hidden = true;
+  $('main').style.minHeight = '';
+}
+
+// --- Submit
+
+async function submit() {
+  if (!inst || $('submitBtn').disabled) return;
+  $('submitBtn').disabled = true;
+  $('submitBtn').textContent = 'Checking…';
+  try {
+    const done = inst, doneCode = { ...code };
+    const result = await evaluate(done, doneCode);
+    const id = done.tpl.id, day = today();
+    let rec = store.cards[id];
+    if (!done.practice) {
+      rec = rec ? { ...rec } : { level: 0, due: day };
+      if (result.pass) { rec.level += 1; rec.due = day + intervalDays(rec.level); }
+      else { rec.level = 0; rec.due = day; store.carry.push(id); }
+      rec.last = Math.round(result.score * 100);
+      store.cards[id] = rec;
+    }
+    lastResult = { inst: done, code: doneCode, result, rec };
+    showResult();
+    nextCard();
+  } finally {
+    $('submitBtn').disabled = false;
+    $('submitBtn').textContent = 'Submit';
+  }
+}
+
+function showResult() {
+  const { inst: done, result, rec } = lastResult;
+  const pct = Math.floor(result.score * 100);
+  let note;
+  if (done.practice) note = 'Practice only: the schedule did not change.';
+  else if (result.pass) note = `Level ${rec.level}; next review in ${intervalDays(rec.level)} day${intervalDays(rec.level) === 1 ? '' : 's'}.`;
+  else note = 'Back to level 0; it will come round again soon.';
+  const box = $('result');
+  box.className = 'result ' + (result.pass ? 'pass' : 'fail');
+  box.replaceChildren(
+    el('span', { class: 'mark' }, result.pass ? '✓ Matched' : `✗ ${pct}% match`),
+    el('span', {}, `“${done.tpl.title}”. ${note}`),
+    el('button', { onclick: openDetails }, 'Details'));
+  box.hidden = false;
+}
+
+function openDetails() {
+  const { inst: done, code: doneCode, result } = lastResult;
+  const body = [el('p', {}, el('b', {}, done.tpl.title), ' · ', result.pass ? el('span', { class: 'ok' }, 'matched') : el('span', { class: 'bad' }, `${Math.floor(result.score * 100)}% match`))];
+  body.push(el('p', { html: rich(done.prompt) }));
+  if (result.diffs.length) body.push(el('h3', {}, 'Differences'), el('ul', {}, result.diffs.slice(0, 40).map(describeDiff)));
+  body.push(el('h3', {}, 'Your code'), el('pre', {}, doneCode[done.lang]));
+  body.push(el('details', {}, el('summary', {}, 'Show one answer'), el('pre', {}, done.target[done.lang])));
+  $('detailBody').replaceChildren(...body.filter(Boolean));
+  $('detailDlg').showModal();
+}
+
+// --- Path
+
+function openPath() {
+  const day = today();
+  const body = [];
+  let unit = null, list = null;
+  for (const t of TEMPLATES) {
+    if (t.unit !== unit) {
+      unit = t.unit;
+      list = el('ul', { class: 'path-list' });
+      body.push(el('div', { class: 'path-unit' }, unit), list);
+    }
+    const rec = store.cards[t.id];
+    const due = rec && isDue(rec, day);
+    list.append(el('li', {}, el('span', {}, t.title), el('span', { class: 'state' + (due ? ' due' : '') }, rec ? levelText(rec) : 'not started')));
+  }
+  $('pathBody').replaceChildren(...body);
+  $('pathDlg').showModal();
+}
+
+// --- About, with a change log read from the repository's main branch.
+// It follows the first parent from the tip, so each merged pull request is one
+// line (its title) and the commits inside it are skipped.
+
+const REPO = 'sonusario/frontend_flashing';
+let logLoaded = false;
+function openAbout() {
+  $('aboutDlg').showModal();
+  if (logLoaded) return;
+  logLoaded = true;
+  fetch(`https://api.github.com/repos/${REPO}/commits?sha=main&per_page=100`)
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(commits => {
+      const bySha = new Map(commits.map(c => [c.sha, c]));
+      const items = [];
+      for (let c = commits[0]; c; c = c.parents[0] && bySha.get(c.parents[0].sha)) {
+        const lines = c.commit.message.split('\n');
+        const merged = /^Merge pull request #\d+/.test(lines[0]);
+        const text = (merged && lines.slice(1).find(l => l.trim())) || lines[0];
+        items.push(el('li', {}, el('time', {}, c.commit.committer.date.slice(0, 10)), el('a', { href: c.html_url, target: '_blank', rel: 'noopener' }, text.trim())));
+      }
+      $('aboutLog').replaceChildren(...items);
+    })
+    .catch(() => {
+      logLoaded = false;
+      $('aboutLog').replaceChildren(el('li', { class: 'muted' }, "Couldn't load the change log. ",
+        el('a', { href: `https://github.com/${REPO}/commits/main`, target: '_blank', rel: 'noopener' }, 'See the history on GitHub.')));
+    });
+}
+
+// =============================================================================
+// Editor behavior
+// =============================================================================
+
+let editTimer = 0;
+function onEdit() {
+  code[inst.lang] = $('code').value;
+  clearTimeout(editTimer);
+  editTimer = setTimeout(() => {
+    refreshCurrent();
+    store.current.code = { [inst.lang]: code[inst.lang] };
+    saveStore();
+  }, 350);
+  scheduleContext();
+}
+
+function editorKeys(e) {
+  const ta = e.target;
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); submit(); return; }
+  if (ta.readOnly) return;
+  const { selectionStart: s, selectionEnd: end, value } = ta;
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const lineStart = value.lastIndexOf('\n', s - 1) + 1;
+    if (e.shiftKey) {
+      const block = value.slice(lineStart, end), out = block.replace(/^ {1,2}/gm, '');
+      ta.setRangeText(out, lineStart, end, 'preserve');
+      ta.setSelectionRange(Math.max(lineStart, s - (block.length - out.length > 0 && /^ /.test(block) ? Math.min(2, block.match(/^ */)[0].length) : 0)), end - (block.length - out.length));
+    } else if (s !== end && value.slice(s, end).includes('\n')) {
+      const block = value.slice(lineStart, end), out = block.replace(/^/gm, '  ');
+      ta.setRangeText(out, lineStart, end, 'preserve');
+      ta.setSelectionRange(s + 2, end + (out.length - block.length));
+    } else {
+      ta.setRangeText('  ', s, end, 'end');
+    }
+    onEdit();
+  } else if (e.key === 'Enter' && !e.shiftKey && !e.altKey) {
+    e.preventDefault();
+    const lineStart = value.lastIndexOf('\n', s - 1) + 1;
+    let indent = value.slice(lineStart, s).match(/^\s*/)[0];
+    if (/[{([>]\s*$/.test(value.slice(lineStart, s)) && !/<\/[^>]*>\s*$/.test(value.slice(lineStart, s))) indent += '  ';
+    ta.setRangeText('\n' + indent, s, end, 'end');
+    onEdit();
+  }
+}
+
+// =============================================================================
+// Install as an app: manifest (built here so the app stays one page), icons
+// drawn from the favicon, and the service worker in sw.js.
+// =============================================================================
+
+function setupPwa() {
+  const svg = document.querySelector('link[rel="icon"]').href;
+  $('brandIcon').src = svg;
+  const img = new Image();
+  img.onload = () => {
+    const icon = size => {
+      const c = document.createElement('canvas');
+      c.width = c.height = size;
+      c.getContext('2d').drawImage(img, 0, 0, size, size);
+      return c.toDataURL('image/png');
+    };
+    let icons = [];
+    try { icons = [{ src: icon(192), sizes: '192x192', type: 'image/png' }, { src: icon(512), sizes: '512x512', type: 'image/png', purpose: 'any' }]; } catch (e) { /* tainted canvas */ }
+    icons.push({ src: svg, sizes: 'any', type: 'image/svg+xml' });
+    const here = new URL('./', location.href).href;
+    const manifest = { name: 'Frontend Flashing', short_name: 'FE Flashing', description: document.querySelector('meta[name="description"]').content,
+      start_url: here, scope: here, display: 'standalone', background_color: '#12151c', theme_color: '#151821', icons };
+    $('manifestLink').href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
+    if (icons[0] && icons[0].type === 'image/png') document.head.append(el('link', { rel: 'apple-touch-icon', href: icons[0].src }));
+  };
+  img.src = svg;
+
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { /* offline support is optional */ }));
+  }
+  let deferred = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; $('installBtn').hidden = false; });
+  $('installBtn').addEventListener('click', async () => {
+    if (!deferred) return;
+    deferred.prompt();
+    await deferred.userChoice.catch(() => null);
+    deferred = null;
+    $('installBtn').hidden = true;
+  });
+}
+
+// =============================================================================
+// Start
+// =============================================================================
+
+function init() {
+  setupPreviews();
+  setupPwa();
+  $('code').addEventListener('input', onEdit);
+  $('code').addEventListener('keydown', editorKeys);
+  $('tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b && inst) { viewLang = b.dataset.lang; showEditor(); } });
+  $('targetBtn').addEventListener('click', () => setTarget(!ui.target));
+  $('contextBtn').addEventListener('click', () => setContext(!ui.context));
+  $('hintBtn').addEventListener('click', () => ($('hint').hidden ? openHint() : closeHint()));
+  $('vpToggle').addEventListener('click', () => {
+    ui.port = !ui.port;
+    $('views').classList.toggle('show-port', ui.port);
+    $('views').classList.toggle('show-land', !ui.port);
+    $('vpToggle').textContent = ui.port ? 'Show 16:9' : 'Show 9:16';
+  });
+  $('submitBtn').addEventListener('click', submit);
+  $('resetBtn').addEventListener('click', () => {
+    if (!inst || !confirm('Put this card’s code back to how it started?')) return;
+    code = { ...inst.starter };
+    viewLang = inst.lang;
+    showEditor();
+    onEdit();
+  });
+  $('clearConsole').addEventListener('click', () => { if (ui.target) frames.consoleTgt = []; else frames.consoleCur = []; renderConsole(); });
+  $('aboutBtn').addEventListener('click', openAbout);
+  $('aboutClose').addEventListener('click', () => $('aboutDlg').close());
+  $('pathBtn').addEventListener('click', openPath);
+  $('pathClose').addEventListener('click', () => $('pathDlg').close());
+  $('detailClose').addEventListener('click', () => $('detailDlg').close());
+  $('resetProgress').addEventListener('click', () => {
+    if (!confirm('Forget all progress and start the path again?')) return;
+    store = { cards: {}, bucket: [], carry: [], current: null };
+    saveStore();
+    $('aboutDlg').close();
+    $('result').hidden = true;
+    nextCard();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !$('hint').hidden) closeHint();
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && e.target.id !== 'code') { e.preventDefault(); submit(); }
+  });
+
+  const cur = store.current;
+  if (cur && TEMPLATE_BY_ID.has(cur.id)) loadCard(cur.id, cur.seed, cur.code, cur.practice);
+  else nextCard();
+}
+
+init();
+
+// For automated checks: grade any card's answer or starting code.
+window.frontendFlashing = {
+  templates: ORDER,
+  async check(id, seed = 1, which = 'answer') {
+    const i = makeInstance(TEMPLATE_BY_ID.get(id), seed);
+    return evaluate(i, which === 'answer' ? i.target : i.starter);
+  },
+};
+</script>
+</body>
+</html>
