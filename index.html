@@ -48,6 +48,7 @@ code { background: var(--panel2); border-radius: 4px; padding: 0 4px; }
 .brand img { width: 22px; height: 22px; }
 .stats { color: var(--muted); font-size: 13px; }
 .top .spacer { flex: 1; }
+@media (max-width: 520px) { .stats { order: 5; flex-basis: 100%; margin-top: -8px; font-size: 12px; } }
 
 /* ---------------------------------------------------------------- task */
 .task { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
@@ -58,28 +59,53 @@ code { background: var(--panel2); border-radius: 4px; padding: 0 4px; }
 .prompt { margin: 8px 0 10px; font-size: 15px; }
 .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .actions .spacer { flex: 1; }
-#vpToggle { display: none; }
-.result { margin-top: 10px; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel2);
-  display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.keys { font-size: 12px; }
+@media (hover: none) { .keys { display: none; } }
+button.quiet { background: none; color: var(--muted); }
+button.quiet:hover:not(:disabled) { color: var(--text); }
+/* The last card's result sits above the new card, so it reads as what just happened. */
+.result { margin: -4px -6px 10px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel2);
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; }
 .result.pass { border-color: var(--good); }
 .result.fail { border-color: var(--bad); }
 .result .mark { font-weight: 700; }
 .result.pass .mark { color: var(--good); }
 .result.fail .mark { color: var(--bad); }
+.result button { padding: 2px 8px; font-size: 12px; margin-left: auto; }
 .answer { margin-top: 10px; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--flash); background: var(--panel2); }
 .answer p { margin: 0 0 6px; }
 .answer pre { margin: 0 0 8px; background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; overflow: auto; max-height: 260px; }
-.toast { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 20;
-  width: max-content; max-width: min(520px, calc(100vw - 24px)); padding: 10px 14px; border-radius: var(--radius);
-  background: var(--panel2); border: 1px solid var(--flash); box-shadow: 0 6px 24px rgba(0, 0, 0, .35); cursor: pointer; }
 
-/* ---------------------------------------------------------------- work area */
-.main { position: relative; margin-top: 12px; }
-.work { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+/* ---------------------------------------------------------------- work area
+   Two columns on wide screens: the page (preview, then help) beside the code
+   (editor, then console). On narrower screens one column, with help above the
+   preview so the preview and the editor always stay next to each other. */
+.work { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); margin-top: 12px; }
+.col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 @media (min-width: 1100px) {
   .work { grid-template-columns: minmax(0, 1.2fr) minmax(380px, 1fr); align-items: start; }
 }
-.views { display: flex; gap: 12px; align-items: flex-start; max-width: 920px; }
+@media (max-width: 1099px) {
+  .work { display: flex; flex-direction: column; }
+  .col { display: contents; }
+  .help { order: -1; }
+}
+
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); }
+.panel-head { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--muted); min-height: 37px; }
+.panel-head .spacer { flex: 1; }
+.panel-head button { padding: 2px 8px; font-size: 12px; }
+.panel-head button.icon { font-size: 16px; line-height: 1; padding: 1px 7px 3px; }
+
+/* Segmented buttons: one of a few views. */
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; background: none; color: var(--muted); padding: 3px 10px; font-size: 12px; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--panel2); color: var(--text); font-weight: 600; }
+#showSeg button[data-show="tgt"][aria-pressed="true"] { background: var(--flash); color: #1a1400; }
+#vpSeg { display: none; }
+
+.views { display: flex; gap: 12px; align-items: flex-start; padding: 10px; }
 .vp { margin: 0; min-width: 0; }
 .vp.land { flex: 1.7778 1 0; }
 .vp.port { flex: .5625 1 0; }
@@ -87,6 +113,7 @@ code { background: var(--panel2); border-radius: 4px; padding: 0 4px; }
 .vp .badge { display: none; color: #1a1400; background: var(--flash); border-radius: 4px; padding: 0 5px; font-weight: 600; }
 .views.target .badge { display: inline; }
 .screen { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+.views.target .screen { border-color: var(--flash); }
 .vp.land .screen { aspect-ratio: 16 / 9; }
 .vp.port .screen { aspect-ratio: 9 / 16; }
 .screen iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; transform: scale(var(--s, .5)); background: #fff; }
@@ -94,22 +121,24 @@ code { background: var(--panel2); border-radius: 4px; padding: 0 4px; }
 .views.target .screen .tgt { visibility: visible; }
 .views.target .screen .cur { visibility: hidden; }
 @media (max-width: 760px) {
-  #vpToggle { display: inline-block; }
+  #vpSeg { display: inline-flex; }
   .views .vp { flex: 1 1 auto; width: 100%; }
   .views.show-land .vp.port, .views.show-port .vp.land { display: none; }
-  .vp.port { max-width: calc(62vh * 9 / 16); margin: 0 auto; }
+  .vp figcaption { display: none; }
+  .vp.port { max-width: calc(58vh * 9 / 16); margin: 0 auto; }
 }
 
-.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); }
-.panel-head { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--muted); }
-.panel-head .spacer { flex: 1; }
-.panel-head button { padding: 2px 8px; font-size: 12px; }
-
-.context { margin-top: 12px; }
-.context .body { padding: 8px 12px 12px; }
-.context h3 { margin: 10px 0 4px; font-size: 13px; }
-.context ul { margin: 0; padding-left: 18px; }
-.context li { margin: 3px 0; }
+/* ---------------------------------------------------------------- help: Context and Hint */
+.help .tabs { margin-left: 4px; }
+.help-body { padding: 8px 12px 12px; overflow: auto; }
+@media (max-width: 1099px) { .help-body { max-height: 42vh; } }
+@media (min-width: 1100px) { .help-body { max-height: calc(100dvh - 120px); } }
+.help h3 { margin: 10px 0 4px; font-size: 13px; }
+.help ul { margin: 0; padding-left: 18px; }
+.help li { margin: 3px 0; }
+.help .doc h2 { margin: 6px 0 6px; font-size: 16px; }
+.help .doc p { margin: 0 0 8px; }
+.help pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; overflow: auto; margin: 0 0 8px; }
 .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--line); vertical-align: -1px; margin-right: 3px; }
 .diff-where { color: var(--muted); font-size: 12px; }
 .ok { color: var(--good); }
@@ -119,7 +148,7 @@ code { background: var(--panel2); border-radius: 4px; padding: 0 4px; }
 /* ---------------------------------------------------------------- editor */
 .tabs { display: flex; gap: 2px; }
 .tabs button { border-radius: 5px; padding: 3px 10px; font-size: 12px; background: none; border-color: transparent; color: var(--muted); }
-.tabs button.active { background: var(--panel2); border-color: var(--line); color: var(--text); }
+.tabs button.active, .tabs button[aria-selected="true"] { background: var(--panel2); border-color: var(--line); color: var(--text); }
 .tabs button.locked::after { content: " · read-only"; color: var(--code-dim); }
 .code-wrap { background: var(--code-bg); border-radius: 0 0 var(--radius) var(--radius); }
 .given { margin: 0; padding: 8px 12px; color: var(--code-dim); white-space: pre-wrap; border-bottom: 1px dashed var(--line); }
@@ -131,7 +160,6 @@ code { background: var(--panel2); border-radius: 4px; padding: 0 4px; }
 }
 #code[readonly] { color: var(--code-dim); }
 @media (min-width: 1100px) { #code { min-height: 340px; } }
-.console { margin-top: 12px; }
 .console ul { list-style: none; margin: 0; padding: 6px 10px; max-height: 220px; overflow: auto; min-height: 60px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; background: var(--code-bg);
   border-radius: 0 0 var(--radius) var(--radius); }
@@ -140,13 +168,7 @@ code { background: var(--panel2); border-radius: 4px; padding: 0 4px; }
 .console li.warn { color: var(--warn); }
 .console li.error { color: var(--bad); }
 .console li.empty { color: var(--code-dim); border: 0; }
-
-/* ---------------------------------------------------------------- hint */
-.hint { position: absolute; inset: 0; z-index: 5; background: var(--bg); overflow: auto; }
-.hint .doc { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; max-width: 760px; }
-.hint h2 { margin: 10px 0 6px; font-size: 18px; }
-.hint pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; overflow: auto; }
-.hint .doc-links { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+.about-link { margin: 12px 0 0; text-align: right; font-size: 12px; }
 
 .done-card { padding: 20px 0; }
 
@@ -184,6 +206,7 @@ dialog pre { background: var(--code-bg); border: 1px solid var(--line); border-r
 </header>
 
 <section class="task" id="task">
+  <div id="result" class="result" hidden></div>
   <div class="task-head">
     <span class="unit" id="cardUnit"></span>
     <h1 id="cardTitle"></h1>
@@ -191,55 +214,68 @@ dialog pre { background: var(--code-bg); border: 1px solid var(--line); border-r
   </div>
   <p class="prompt" id="prompt"></p>
   <div class="actions" id="actions">
-    <button id="targetBtn" aria-pressed="false" title="Show the result you are aiming for">Target</button>
-    <button id="contextBtn" aria-pressed="false" title="Exact values and differences (brings the next review sooner)">Context</button>
-    <button id="hintBtn" title="Open the reference for this topic (brings the next review sooner)">Hint</button>
-    <button id="vpToggle">Show 9:16</button>
+    <span class="keys muted">Ctrl+Enter submits</span>
     <span class="spacer"></span>
-    <button id="giveUpBtn" title="Show the answer; the card stays due">Give up</button>
+    <button id="giveUpBtn" class="quiet" title="Show the answer; the card stays due">Give up</button>
     <button id="submitBtn" class="primary" title="Ctrl+Enter">Submit</button>
   </div>
   <div id="answer" class="answer" hidden></div>
-  <div id="result" class="result" hidden></div>
 </section>
 
-<div class="main" id="main">
-  <div class="work" id="work">
-    <div>
+<div class="work" id="work">
+  <div class="col">
+    <section class="panel preview" id="preview">
+      <div class="panel-head">
+        <div class="seg" id="showSeg" role="group" aria-label="Preview shows">
+          <button data-show="cur" aria-pressed="true">Your page</button><button data-show="tgt" aria-pressed="false" title="The result you are aiming for">Target</button>
+        </div>
+        <span class="spacer"></span>
+        <div class="seg" id="vpSeg" role="group" aria-label="View">
+          <button data-vp="land" aria-pressed="true">16:9</button><button data-vp="port" aria-pressed="false">9:16</button>
+        </div>
+      </div>
       <div class="views show-land" id="views">
         <figure class="vp land"><figcaption>16:9 <span class="badge">Target</span></figcaption><div class="screen" id="screenLand"></div></figure>
         <figure class="vp port"><figcaption>9:16 <span class="badge">Target</span></figcaption><div class="screen" id="screenPort"></div></figure>
       </div>
-      <section class="panel context" id="context" hidden>
-        <div class="panel-head"><span>Context</span><span class="spacer"></span><span id="contextState"></span></div>
-        <div class="body" id="contextBody"></div>
-      </section>
-    </div>
-    <div>
-      <section class="panel editor">
-        <div class="panel-head">
-          <div class="tabs" id="tabs">
-            <button data-lang="html">HTML</button><button data-lang="css">CSS</button><button data-lang="js">JS</button>
-          </div>
-          <span class="spacer"></span>
-          <button id="resetBtn" title="Put this card's code back to how it started">Reset</button>
+    </section>
+    <section class="panel help" id="help">
+      <div class="panel-head">
+        <span>Help</span>
+        <div class="tabs" id="aidTabs" role="tablist">
+          <button data-aid="context" role="tab" aria-selected="false" title="Exact target values and every difference, updated as you type">Context</button><button data-aid="hint" role="tab" aria-selected="false" title="A short reference for this topic">Hint</button>
         </div>
-        <div class="code-wrap">
-          <pre class="given" id="givenPre" data-label="Runs before your code" hidden></pre>
-          <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code editor"></textarea>
-          <pre class="given after" id="givenPost" data-label="Runs after your code" hidden></pre>
-        </div>
-      </section>
-      <section class="panel console">
-        <div class="panel-head"><span id="consoleTitle">Console</span><span class="spacer"></span><button id="clearConsole">Clear</button></div>
-        <ul id="consoleList"></ul>
-      </section>
-      <p style="margin: 12px 0 0; text-align: right; font-size: 12px"><button class="link" id="aboutBtn">About</button></p>
-    </div>
+        <span class="spacer"></span>
+        <span id="contextState"></span>
+        <button id="helpClose" class="icon" title="Close" aria-label="Close help" hidden>×</button>
+      </div>
+      <div class="help-body" id="contextBody" role="tabpanel" hidden></div>
+      <div class="help-body doc" id="hintBody" role="tabpanel" hidden></div>
+    </section>
   </div>
-  <section class="hint" id="hint" hidden></section>
-  <section class="done-card" id="doneCard" hidden></section>
+  <div class="col">
+    <section class="panel editor" id="editor">
+      <div class="panel-head">
+        <div class="tabs" id="tabs">
+          <button data-lang="html">HTML</button><button data-lang="css">CSS</button><button data-lang="js">JS</button>
+        </div>
+        <span class="spacer"></span>
+        <button id="resetBtn" title="Put this card's code back to how it started">Reset</button>
+      </div>
+      <div class="code-wrap">
+        <pre class="given" id="givenPre" data-label="Runs before your code" hidden></pre>
+        <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Code editor"></textarea>
+        <pre class="given after" id="givenPost" data-label="Runs after your code" hidden></pre>
+      </div>
+    </section>
+    <section class="panel console" id="console">
+      <div class="panel-head"><span id="consoleTitle">Console</span><span class="spacer"></span><button id="clearConsole">Clear</button></div>
+      <ul id="consoleList"></ul>
+    </section>
+  </div>
 </div>
+<section class="done-card" id="doneCard" hidden></section>
+<p class="about-link"><button class="link" id="aboutBtn">About</button></p>
 
 <div class="grade-host" id="gradeHost" aria-hidden="true"></div>
 
@@ -265,8 +301,6 @@ dialog pre { background: var(--code-bg); border: 1px solid var(--line); border-r
   <p id="giveUpText"></p>
   <div class="row"><button id="giveUpCancel">Keep trying</button><button id="giveUpOk" class="primary">Show the answer</button></div>
 </dialog>
-
-<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <dialog id="detailDlg" aria-labelledby="detailTitle">
   <h2 id="detailTitle">Last result</h2>
@@ -1220,18 +1254,23 @@ function compare(t, m, inst) {
 }
 
 // Runs the learner's code and the answer side by side, in both views and with
-// extra test values, and compares every pair.
+// extra test values, and compares every pair. The answer's measurements never
+// change for a card, so they are taken once and kept on the card (a timed-out
+// one is tried again next time).
 async function evaluate(inst, code) {
   const runs = [{ given: inst.given, vps: ['land', 'port'], alt: false }, ...inst.alts.map(g => ({ given: g, vps: ['land'], alt: true }))];
   const base = { props: [...new Set([...VISUAL, ...inst.focus])], attrs: inst.attrs, settle: inst.settle };
+  const cache = inst.targetRuns || (inst.targetRuns = new Map());
   const jobs = [];
-  for (const run of runs) {
+  runs.forEach((run, r) => {
     for (const vp of run.vps) {
       const req = { ...base, actions: (run.given && run.given.actions) || [] };
-      jobs.push(Promise.all([measure(vp, buildDoc(inst.target, run.given), req), measure(vp, buildDoc(code, run.given), req)])
+      const key = r + vp;
+      if (!cache.has(key)) cache.set(key, measure(vp, buildDoc(inst.target, run.given), req).then(t => { if (t.timeout) cache.delete(key); return t; }));
+      jobs.push(Promise.all([cache.get(key), measure(vp, buildDoc(code, run.given), req)])
         .then(([t, m]) => ({ run, vp, t, m })));
     }
-  }
+  });
   const results = await Promise.all(jobs);
   let checks = 0, passed = 0;
   const diffs = new Map();
@@ -1315,18 +1354,13 @@ function describeDiff(d) {
 //  2. Then level 0: cards missed in the last bucket lead, then other level 0
 //     cards in path order, then new cards in path order.
 //  3. A match moves a card up a level; a miss sends it back to level 0.
-//  4. Each aid opened on a card (Context, Hint) takes one level off the wait
-//     before its next review, down to later the same day. Giving up counts as
-//     a miss: the card stays due.
+//  4. Context and Hint are free to use. Giving up counts as a miss: the card
+//     stays due.
 // =============================================================================
 
 const PHI = 1.618033988749895;
 const BUCKET_SIZE = 7;
 const intervalDays = level => level <= 0 ? 0 : Math.max(1, Math.round(PHI ** (level - 1)));
-const AID_NAMES = { context: 'Context', hint: 'Hint' };
-const aidList = aids => Object.keys(AID_NAMES).filter(k => aids[k]).map(k => AID_NAMES[k]);
-// Days until the next review if a card now at `level` is matched with these aids.
-const matchDays = (level, aids) => intervalDays(level + 1 - aidList(aids).length);
 const inDays = d => d <= 0 ? 'later today' : `in ${d} day${d === 1 ? '' : 's'}`;
 function today() {
   const now = new Date();
@@ -1401,7 +1435,7 @@ let inst = null;          // the card being worked on
 let code = null;          // the learner's html/css/js
 let viewLang = 'html';    // the tab being shown
 let lastResult = null;    // { inst, code, result, rec } from the last Submit
-const ui = { target: false, context: false, port: false };
+const ui = { target: false, aid: null, port: false };  // aid: the open help tab ('context' or 'hint')
 
 const frames = {};
 function setupPreviews() {
@@ -1474,27 +1508,22 @@ function renderStats() {
   $('stats').textContent = `${c.seen} of ${c.total} cards started · ${c.due} due`;
 }
 
-// saved: what store.current kept for this card (code, aids used, gave up), if resuming it.
+// saved: what store.current kept for this card (code, gave up), if resuming it.
 function loadCard(id, seed, saved, practice) {
   const tpl = TEMPLATE_BY_ID.get(id);
   saved = saved || {};
   inst = makeInstance(tpl, seed);
   inst.practice = !!practice;
-  inst.aids = { context: !!(saved.aids && saved.aids.context), hint: !!(saved.aids && saved.aids.hint) };
   inst.gaveUp = !!saved.gaveUp;
   const savedCode = saved.code;
   code = savedCode && typeof savedCode[inst.lang] === 'string' ? { ...inst.starter, [inst.lang]: savedCode[inst.lang] } : { ...inst.starter };
   viewLang = inst.lang;
-  store.current = { id, seed, code: { [inst.lang]: code[inst.lang] }, practice: !!practice, aids: { ...inst.aids }, gaveUp: inst.gaveUp };
+  store.current = { id, seed, code: { [inst.lang]: code[inst.lang] }, practice: !!practice, gaveUp: inst.gaveUp };
   saveStore();
 
   $('doneCard').hidden = true;
   $('work').hidden = false;
   $('actions').hidden = false;
-  closeHint();
-  $('toast').hidden = true;
-  // Context counts as an aid per card, so it never stays open into the next one.
-  setContext(false);
   $('cardUnit').textContent = tpl.unit + (inst.practice ? ' · practice' : '');
   $('cardTitle').textContent = tpl.title;
   $('prompt').innerHTML = rich(inst.prompt);
@@ -1503,13 +1532,13 @@ function loadCard(id, seed, saved, practice) {
   showEditor();
   refreshTarget();
   refreshCurrent();
+  renderHelp();
   renderStats();
 }
 
 // The level line, the answer after giving up, and the Submit / Next button.
 function renderCardState() {
-  const used = aidList(inst.aids);
-  $('cardLevel').textContent = levelText(store.cards[inst.tpl.id]) + (inst.gaveUp ? ' · gave up' : used.length ? ` · used ${used.join(' and ')}` : '');
+  $('cardLevel').textContent = levelText(store.cards[inst.tpl.id]) + (inst.gaveUp ? ' · gave up' : '');
   $('giveUpBtn').hidden = inst.gaveUp;
   $('submitBtn').textContent = inst.gaveUp ? 'Next' : 'Submit';
   $('submitBtn').title = inst.gaveUp ? 'Go to the next card (Ctrl+Enter)' : 'Ctrl+Enter';
@@ -1519,30 +1548,6 @@ function renderCardState() {
     el('pre', {}, inst.target[inst.lang]),
     el('button', { onclick: () => { code[inst.lang] = inst.target[inst.lang]; viewLang = inst.lang; showEditor(); onEdit(); } }, 'Put it in the editor'));
   $('answer').hidden = false;
-}
-
-let toastTimer = 0;
-function toast(text) {
-  clearTimeout(toastTimer);
-  $('toast').textContent = text;
-  $('toast').hidden = false;
-  toastTimer = setTimeout(() => { $('toast').hidden = true; }, 7000);
-}
-
-// The first use of an aid on a card brings its next review sooner; say by how much.
-function useAid(kind) {
-  if (!inst || inst.aids[kind] || inst.gaveUp) return;
-  const level = store.cards[inst.tpl.id] ? store.cards[inst.tpl.id].level : 0;
-  const before = matchDays(level, inst.aids);
-  inst.aids[kind] = true;
-  store.current.aids = { ...inst.aids };
-  saveStore();
-  renderCardState();
-  if (inst.practice) return;
-  const after = matchDays(level, inst.aids);
-  toast(after < before
-    ? `${AID_NAMES[kind]} used: if you match this card, its next review is ${inDays(after)} instead of ${inDays(before)}.`
-    : `${AID_NAMES[kind]} used: if you match this card, its next review is still ${inDays(after)}, the soonest it can be.`);
 }
 
 function nextCard() {
@@ -1572,7 +1577,6 @@ function giveUp() {
   inst.gaveUp = true;
   store.current.gaveUp = true;
   saveStore();
-  closeHint();
   renderCardState();
   renderStats();
 }
@@ -1590,7 +1594,6 @@ function showCaughtUp() {
   store.current = null;
   saveStore();
   renderStats();
-  closeHint();
   $('answer').hidden = true;
   $('work').hidden = true;
   $('actions').hidden = true;
@@ -1608,7 +1611,7 @@ function showCaughtUp() {
 
 function setTarget(on) {
   ui.target = on;
-  $('targetBtn').setAttribute('aria-pressed', String(on));
+  for (const b of $('showSeg').children) b.setAttribute('aria-pressed', String((b.dataset.show === 'tgt') === on));
   $('views').classList.toggle('target', on);
   renderConsole();
 }
@@ -1618,7 +1621,7 @@ function setTarget(on) {
 let contextTimer = 0, contextRun = 0;
 function scheduleContext() {
   clearTimeout(contextTimer);
-  if (ui.context) contextTimer = setTimeout(updateContext, 700);
+  if (ui.aid === 'context') contextTimer = setTimeout(updateContext, 700);
 }
 
 const TRIVIAL = new Set(['', 'none', 'normal', 'auto', 'static', '0px', '0', 'rgba(0, 0, 0, 0)', 'visible', 'start', 'content-box']);
@@ -1629,7 +1632,7 @@ async function updateContext() {
   const run = ++contextRun;
   $('contextState').textContent = 'Checking…';
   const res = await evaluate(inst, code);
-  if (run !== contextRun || !ui.context) return;
+  if (run !== contextRun || ui.aid !== 'context') return;
   $('contextState').textContent = `${Math.floor(res.score * 100)}% match`;
   const body = [];
 
@@ -1658,11 +1661,24 @@ async function updateContext() {
   $('contextBody').replaceChildren(...body.filter(Boolean));
 }
 
-function setContext(on) {
-  ui.context = on;
-  $('contextBtn').setAttribute('aria-pressed', String(on));
-  $('context').hidden = !on;
-  if (on) { $('contextBody').replaceChildren(el('p', { class: 'muted' }, 'Measuring…')); updateContext(); useAid('context'); }
+// --- Help: one panel with a Context tab and a Hint tab. It stays open from
+// card to card, and its tab is redrawn for each new card.
+
+function setAid(kind) {
+  ui.aid = kind;
+  renderHelp();
+}
+function renderHelp() {
+  const kind = inst ? ui.aid : null;
+  for (const b of $('aidTabs').children) b.setAttribute('aria-selected', String(b.dataset.aid === kind));
+  $('helpClose').hidden = !kind;
+  $('contextBody').hidden = kind !== 'context';
+  $('hintBody').hidden = kind !== 'hint';
+  $('contextState').textContent = '';
+  clearTimeout(contextTimer);
+  contextRun++;
+  if (kind === 'context') { $('contextBody').replaceChildren(el('p', { class: 'muted' }, 'Measuring…')); updateContext(); }
+  if (kind === 'hint') renderHint();
 }
 
 // --- Hint
@@ -1692,28 +1708,18 @@ function similarCard(card) {
   return best && best.overlap <= 0.5 ? best : null;
 }
 
-function openHint() {
-  if (!inst) return;
-  useAid('hint');
+function renderHint() {
   const doc = DOCS[inst.tpl.doc];
-  const similar = similarCard(inst);
-  $('hint').replaceChildren(el('div', { class: 'doc' },
-    el('button', { onclick: closeHint }, '← Back to the card'),
+  if (inst.similar === undefined) inst.similar = similarCard(inst);
+  const similar = inst.similar;
+  $('hintBody').replaceChildren(...[
     el('h2', {}, doc.t),
     doc.p.map(p => el('p', {}, p)),
     answerOverlap(doc.code, inst) < 1 ? el('pre', {}, doc.code) : null,
     similar ? [el('h3', {}, 'A similar card'), el('p', { html: rich(similar.prompt) }), el('pre', {}, similar.sol.trimEnd())] : null,
-    el('div', { class: 'doc-links' },
-      el('a', { href: MDN + doc.mdn, target: '_blank', rel: 'noopener' }, 'Read more on MDN ↗'),
-      el('button', { onclick: closeHint }, 'Back to the card'))));
-  $('hint').hidden = false;
-  $('main').style.minHeight = $('hint').firstChild.offsetHeight + 'px';
-  $('hint').scrollTop = 0;
-  $('hint').querySelector('button').focus();
-}
-function closeHint() {
-  $('hint').hidden = true;
-  $('main').style.minHeight = '';
+    el('p', {}, el('a', { href: MDN + doc.mdn, target: '_blank', rel: 'noopener' }, 'Read more on MDN ↗')),
+  ].flat().filter(Boolean));
+  $('hintBody').scrollTop = 0;
 }
 
 // --- Submit
@@ -1724,18 +1730,18 @@ async function submit() {
   $('submitBtn').disabled = true;
   $('submitBtn').textContent = 'Checking…';
   try {
-    const done = inst, doneCode = { ...code }, aids = { ...inst.aids };
+    const done = inst, doneCode = { ...code };
     const result = await evaluate(done, doneCode);
     const id = done.tpl.id, day = today();
     let rec = store.cards[id];
     if (!done.practice) {
       rec = rec ? { ...rec } : { level: 0, due: day };
-      if (result.pass) { rec.due = day + matchDays(rec.level, aids); rec.level += 1; }
+      if (result.pass) { rec.level += 1; rec.due = day + intervalDays(rec.level); }
       else { rec.level = 0; rec.due = day; store.carry.push(id); }
       rec.last = Math.round(result.score * 100);
       store.cards[id] = rec;
     }
-    lastResult = { inst: done, code: doneCode, result, rec, aids };
+    lastResult = { inst: done, code: doneCode, result, rec };
     showResult();
     nextCard();
   } finally {
@@ -1746,14 +1752,11 @@ async function submit() {
 }
 
 function showResult() {
-  const { inst: done, result, rec, aids } = lastResult;
+  const { inst: done, result, rec } = lastResult;
   const pct = Math.floor(result.score * 100);
   let note;
   if (done.practice) note = 'Practice only: the schedule did not change.';
-  else if (result.pass) {
-    const used = aidList(aids), days = matchDays(rec.level - 1, aids), full = intervalDays(rec.level);
-    note = `Level ${rec.level}; next review ${inDays(days)}` + (used.length && days < full ? ` instead of ${inDays(full)}, because you used ${used.join(' and ')}.` : '.');
-  }
+  else if (result.pass) note = `Level ${rec.level}; next review ${inDays(intervalDays(rec.level))}.`;
   else note = 'Back to level 0; it will come round again soon.';
   const box = $('result');
   box.className = 'result ' + (result.pass ? 'pass' : 'fail');
@@ -1922,20 +1925,21 @@ function init() {
   $('code').addEventListener('input', onEdit);
   $('code').addEventListener('keydown', editorKeys);
   $('tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b && inst) { viewLang = b.dataset.lang; showEditor(); } });
-  $('targetBtn').addEventListener('click', () => setTarget(!ui.target));
-  $('contextBtn').addEventListener('click', () => setContext(!ui.context));
-  $('hintBtn').addEventListener('click', () => ($('hint').hidden ? openHint() : closeHint()));
-  $('vpToggle').addEventListener('click', () => {
-    ui.port = !ui.port;
+  $('showSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setTarget(b.dataset.show === 'tgt'); });
+  $('vpSeg').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    ui.port = b.dataset.vp === 'port';
     $('views').classList.toggle('show-port', ui.port);
     $('views').classList.toggle('show-land', !ui.port);
-    $('vpToggle').textContent = ui.port ? 'Show 16:9' : 'Show 9:16';
+    for (const x of $('vpSeg').children) x.setAttribute('aria-pressed', String(x === b));
   });
+  $('aidTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b && inst) setAid(ui.aid === b.dataset.aid ? null : b.dataset.aid); });
+  $('helpClose').addEventListener('click', () => setAid(null));
   $('submitBtn').addEventListener('click', submit);
   $('giveUpBtn').addEventListener('click', openGiveUp);
   $('giveUpOk').addEventListener('click', giveUp);
   $('giveUpCancel').addEventListener('click', () => $('giveUpDlg').close());
-  $('toast').addEventListener('click', () => { $('toast').hidden = true; });
   $('resetBtn').addEventListener('click', () => {
     if (!inst || !confirm('Put this card’s code back to how it started?')) return;
     code = { ...inst.starter };
@@ -1958,7 +1962,6 @@ function init() {
     nextCard();
   });
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && !$('hint').hidden) closeHint();
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && e.target.id !== 'code') { e.preventDefault(); submit(); }
   });
 
