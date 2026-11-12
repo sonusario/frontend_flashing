@@ -7,7 +7,8 @@
 <meta name="description" content="Flashcards for front-end skills: match a target page with HTML, CSS and JavaScript, on a spaced-repetition path toward building progressive web apps.">
 <meta name="theme-color" content="#151821">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2016%2016'%3E%3Crect%20width='16'%20height='16'%20rx='3'%20fill='%23151821'/%3E%3Crect%20x='2.5'%20y='3.5'%20width='11'%20height='9'%20rx='1.5'%20fill='none'%20stroke='%238ab4ff'/%3E%3Cpath%20d='M9.2%204.4%205.6%208.7h2.6L7%2011.6l3.6-4.4H8z'%20fill='%23ffc94a'/%3E%3C/svg%3E">
-<link rel="manifest" id="manifestLink">
+<link rel="manifest" id="manifestLink" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 :root {
   --bg: #12151c; --panel: #1a1e28; --panel2: #232838; --line: #2f3548; --text: #e6e9f0; --muted: #98a0b3;
@@ -1882,6 +1883,12 @@ function editorKeys(e) {
 function setupPwa() {
   const svg = document.querySelector('link[rel="icon"]').href;
   $('brandIcon').src = svg;
+  // The hosted copy ships manifest.webmanifest with PNG icons beside the page. Android
+  // only mints a real app (own name, icon and identity) from a manifest at an https
+  // address; a data: one gets a bare shortcut named after the site, so every app on
+  // sonusario.github.io landed as one. Only a copy with no manifest file falls back.
+  fetch($('manifestLink').href, { method: 'HEAD', cache: 'no-store' })
+    .then(r => { if (!r.ok) throw 0; }).catch(() => { img.src = svg; });
   const img = new Image();
   img.onload = () => {
     const icon = size => {
@@ -1899,7 +1906,6 @@ function setupPwa() {
     $('manifestLink').href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
     if (icons[0] && icons[0].type === 'image/png') document.head.append(el('link', { rel: 'apple-touch-icon', href: icons[0].src }));
   };
-  img.src = svg;
 
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { /* offline support is optional */ }));
