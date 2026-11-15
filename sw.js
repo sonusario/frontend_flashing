@@ -2,7 +2,7 @@
 // Pages are network-first (so updates show up), everything else from this
 // site is cache-first and refreshed in the background.
 
-const CACHE = 'frontend-flashing-v1';
+const CACHE = 'frontend-flashing-v2';
 const FILES = ['./', './index.html', './sw.js'];
 
 self.addEventListener('install', event => {
@@ -21,6 +21,8 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const request = event.request;
   if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
+  // The About panel's Check for update and Reload ask for the live copy.
+  if (request.cache === 'reload' && request.mode !== 'navigate') return;
 
   if (request.mode === 'navigate') {
     event.respondWith(
